@@ -146,6 +146,12 @@ At block start or on parameter change, precompute:
 
 If a parameter lock changes per trig, recompute once on trigger / block boundary.
 
+Use `dd_param_cache` once at the start of each render call. Its change mask
+identifies which raw controls changed since the previous block; each machine
+maps only those controls into its own derived coefficients. Call it before
+handling a trigger so parameter locks apply to that trigger. Keep dynamic
+envelope and oscillator state separate from the cached control values.
+
 ## 6. Lookup tables
 
 Recommended tables:

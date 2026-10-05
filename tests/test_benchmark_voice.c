@@ -7,6 +7,7 @@
 #include "benchmark_voice.h"
 #include "dd_fixed.h"
 #include "dd_machine.h"
+#include "dd_tables.h"
 
 static uint32_t energy(const int32_t *x, uint32_t n)
 {
@@ -60,6 +61,21 @@ int main(void)
     uint32_t early = energy(a, 12000);
     uint32_t late = energy(a + 36000, 12000);
     assert(early > late);
+
+    benchmark_voice_init(&va);
+    benchmark_voice_render(&va, &p, 1, a, DD_BLOCK_SIZE);
+    assert(va.params.valid);
+    assert(va.body_inc_base == 4000000u + (uint32_t)p.p[DD_PITCH] * 8000u);
+    assert(va.amp_env.coeff == dd_exp_decay_to_coeff(p.p[DD_DECAY] >> 8));
+
+    p.p[DD_PITCH] += 100;
+    p.p[DD_DECAY] = 1000;
+    p.level = 16000;
+    benchmark_voice_render(&va, &p, 0, a, DD_BLOCK_SIZE);
+    assert(va.body_inc_base == 4000000u + (uint32_t)p.p[DD_PITCH] * 8000u);
+    assert(va.amp_env.coeff == dd_exp_decay_to_coeff(p.p[DD_DECAY] >> 8));
+    assert(va.level == 16000);
+    assert(va.amp_env.active);
 
     printf("ok: benchmark voice deterministic, bounded, decaying (early=%u late=%u)\n",
            early, late);

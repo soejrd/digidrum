@@ -19,6 +19,7 @@
 #include "dd_filter.h"
 #include "dd_resonator.h"
 #include "dd_rate.h"
+#include "dd_param_cache.h"
 
 struct benchmark_voice {
     dd_osc body_osc;
@@ -29,6 +30,13 @@ struct benchmark_voice {
     dd_resonator body_res;
     dd_onepole noise_lp;
     dd_downsampler ds;
+    dd_param_cache params;
+    uint32_t body_inc_base;
+    int32_t noise_level;
+    int32_t bits;
+    int32_t drive;
+    int32_t level;
+    int32_t sweep_target;
     int32_t zoh_prev;
     int32_t zoh_next;
 };

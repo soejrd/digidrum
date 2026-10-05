@@ -44,13 +44,16 @@ out/test_resonator: tests/test_resonator.c | out
 out/test_rate: tests/test_rate.c | out
 	$(CC) $(CFLAGS) $(INCFLAGS) tests/test_rate.c -o $@
 
-out/test_benchmark_voice: tools/benchmark_voice.c tools/benchmark_voice.h dsp/osc.c dsp/tables.c dsp/envelope.c tests/test_benchmark_voice.c | out
+out/test_param_cache: include/dd_param_cache.h include/dd_machine.h tests/test_param_cache.c | out
+	$(CC) $(CFLAGS) $(INCFLAGS) tests/test_param_cache.c -o $@
+
+out/test_benchmark_voice: tools/benchmark_voice.c tools/benchmark_voice.h include/dd_param_cache.h dsp/osc.c dsp/tables.c dsp/envelope.c tests/test_benchmark_voice.c | out
 	$(CC) $(CFLAGS) $(INCFLAGS) tools/benchmark_voice.c dsp/osc.c dsp/tables.c dsp/envelope.c tests/test_benchmark_voice.c -o $@
 
-out/render_benchmark: tools/benchmark_voice.c tools/benchmark_voice.h dsp/osc.c dsp/tables.c dsp/envelope.c tools/render_benchmark.c | out
+out/render_benchmark: tools/benchmark_voice.c tools/benchmark_voice.h include/dd_param_cache.h dsp/osc.c dsp/tables.c dsp/envelope.c tools/render_benchmark.c | out
 	$(CC) $(CFLAGS) $(INCFLAGS) tools/benchmark_voice.c dsp/osc.c dsp/tables.c dsp/envelope.c tools/render_benchmark.c -o $@
 
-test: out/test_percussion out/test_fixed out/test_tables out/test_osc out/test_envelope out/test_noise out/test_filter out/test_resonator out/test_rate out/test_benchmark_voice
+test: out/test_percussion out/test_fixed out/test_tables out/test_osc out/test_envelope out/test_noise out/test_filter out/test_resonator out/test_rate out/test_param_cache out/test_benchmark_voice
 	./out/test_percussion
 	./out/test_fixed
 	./out/test_tables
@@ -60,9 +63,10 @@ test: out/test_percussion out/test_fixed out/test_tables out/test_osc out/test_e
 	./out/test_filter
 	./out/test_resonator
 	./out/test_rate
+	./out/test_param_cache
 	./out/test_benchmark_voice
 
-dsp-test: out/test_fixed out/test_tables out/test_osc out/test_envelope out/test_noise out/test_filter out/test_resonator out/test_rate out/test_benchmark_voice
+dsp-test: out/test_fixed out/test_tables out/test_osc out/test_envelope out/test_noise out/test_filter out/test_resonator out/test_rate out/test_param_cache out/test_benchmark_voice
 	./out/test_fixed
 	./out/test_tables
 	./out/test_osc
@@ -71,6 +75,7 @@ dsp-test: out/test_fixed out/test_tables out/test_osc out/test_envelope out/test
 	./out/test_filter
 	./out/test_resonator
 	./out/test_rate
+	./out/test_param_cache
 	./out/test_benchmark_voice
 
 demo: out/render_demo out/render_benchmark

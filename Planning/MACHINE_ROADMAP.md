@@ -35,11 +35,11 @@ Build these primitives in parallel once the integration contract is stable:
 - [x] bit quantizer
 - [x] half-rate / quarter-rate selection
 - [x] zero-order hold + linear interpolation
-- [ ] block-level parameter coefficient cache
+- [x] block-level parameter coefficient cache
 
 Exit criterion: primitives cross-compile, have deterministic tests, and can render a synthetic benchmark voice.
 
-Host tests, both ColdFire cross-checks, and the synthetic WAV render pass. The block-level coefficient cache remains for machine integration. The benchmark is a deterministic DSP exercise; it is not a hardware timing or audio-quality measurement.
+The shared parameter cache tracks changes once per render block. The benchmark voice uses those changes to refresh its derived settings, including decay coefficient and oscillator increment. Host tests, both ColdFire cross-checks, and the synthetic WAV render pass. The benchmark is a deterministic DSP exercise; it is not a hardware timing or audio-quality measurement.
 
 ## Phase 1 — TRX-style core family
 
