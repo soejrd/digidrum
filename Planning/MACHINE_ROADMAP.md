@@ -20,24 +20,26 @@ Exit criterion: a custom synthesized machine behaves like a reliable Digitakt ma
 
 Build these primitives in parallel once the integration contract is stable:
 
-- [ ] fixed-point math helpers
-- [ ] saturating arithmetic
-- [ ] 32-bit phase accumulator
-- [ ] sine lookup oscillator
-- [ ] triangle / square oscillator
-- [ ] recursive decay envelope
-- [ ] attack-hold-decay envelope
-- [ ] pitch sweep envelope
-- [ ] xorshift noise
-- [ ] one-pole LP / HP
-- [ ] damped 2-pole resonator
-- [ ] hard / soft clip
-- [ ] bit quantizer
-- [ ] half-rate / quarter-rate renderer
-- [ ] zero-order hold + linear interpolation
+- [x] fixed-point math helpers
+- [x] saturating arithmetic
+- [x] 32-bit phase accumulator
+- [x] sine lookup oscillator
+- [x] triangle / square oscillator
+- [x] recursive decay envelope
+- [x] attack-hold-decay envelope
+- [x] pitch sweep envelope
+- [x] xorshift noise
+- [x] one-pole LP / HP
+- [x] damped 2-pole resonator
+- [x] hard / soft clip
+- [x] bit quantizer
+- [x] half-rate / quarter-rate selection
+- [x] zero-order hold + linear interpolation
 - [ ] block-level parameter coefficient cache
 
 Exit criterion: primitives cross-compile, have deterministic tests, and can render a synthetic benchmark voice.
+
+Host tests, both ColdFire cross-checks, and the synthetic WAV render pass. The block-level coefficient cache remains for machine integration. The benchmark is a deterministic DSP exercise; it is not a hardware timing or audio-quality measurement.
 
 ## Phase 1 — TRX-style core family
 

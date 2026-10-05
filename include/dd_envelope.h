@@ -68,17 +68,15 @@ int32_t dd_ahd_env_step(dd_ahd_env *e);
 
 typedef struct {
     int32_t value;
-    int32_t attack_coeff;
     int32_t decay_coeff;
-    int32_t target;
     int32_t base;
     uint8_t active;
 } dd_pitch_sweep_env;
 
 void dd_pitch_sweep_init(dd_pitch_sweep_env *e);
+/* base and target are Q15 pitch values; decay_coeff is in [0, 32767]. */
 void dd_pitch_sweep_trigger(dd_pitch_sweep_env *e, int32_t base,
-                            int32_t target, int32_t attack_coeff,
-                            int32_t decay_coeff);
+                            int32_t target, int32_t decay_coeff);
 int32_t dd_pitch_sweep_step(dd_pitch_sweep_env *e);
 
 #endif

@@ -63,11 +63,12 @@ static void test_not_stuck(void)
 
 static void test_s16(void)
 {
-    dd_noise n;
+    dd_noise n, reference;
     dd_noise_init(&n, 99);
+    dd_noise_init(&reference, 99);
     for (uint32_t i = 0; i < 100; ++i) {
         int16_t v = dd_noise_s16(&n);
-        assert(v >= -32768 && v <= 32767);
+        assert(v == dd_noise_q15(&reference));
     }
 }
 

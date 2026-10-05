@@ -34,9 +34,9 @@ static void test_interp_half_rate(void)
     dd_interp i;
     dd_interp_init(&i, 0, 16384);
     int32_t a = dd_interp_step(&i, 32767);
-    assert(a == 0);
+    assert(a == 16383);
     int32_t b = dd_interp_step(&i, 32767);
-    assert(b == 0 || b == 32767);
+    assert(b == 32767);
 }
 
 static void test_downsampler_even_rate(void)
@@ -44,8 +44,17 @@ static void test_downsampler_even_rate(void)
     dd_downsampler d;
     dd_downsampler_init(&d);
     for (uint32_t i = 0; i < 10; ++i)
-        dd_downsampler_should_process(&d);
-    assert(d.tick == 0 || d.tick == 1);
+        assert(dd_downsampler_should_process(&d) == (i % 2 == 1));
+    assert(d.tick == 0);
+}
+
+static void test_downsampler_quarter_rate(void)
+{
+    dd_downsampler d;
+    dd_downsampler_init_rate(&d, 4);
+    for (uint32_t i = 0; i < 12; ++i)
+        assert(dd_downsampler_should_process(&d) == (i % 4 == 3));
+    assert(d.tick == 0);
 }
 
 static void test_zoh_holds_value(void)
@@ -64,6 +73,7 @@ int main(void)
     test_interp_zero_rate();
     test_interp_half_rate();
     test_downsampler_even_rate();
+    test_downsampler_quarter_rate();
     test_zoh_holds_value();
     printf("ok: rate / interpolation\n");
     return 0;

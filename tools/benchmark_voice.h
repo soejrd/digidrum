@@ -26,6 +26,7 @@ struct benchmark_voice {
     dd_decay_env amp_env;
     dd_decay_env noise_env;
     dd_pitch_sweep_env sweep;
+    dd_resonator body_res;
     dd_onepole noise_lp;
     dd_downsampler ds;
     int32_t zoh_prev;

@@ -61,30 +61,29 @@ int32_t dd_ahd_env_step(dd_ahd_env *e)
 void dd_pitch_sweep_init(dd_pitch_sweep_env *e)
 {
     e->value = 0;
-    e->attack_coeff = 0;
     e->decay_coeff = 0;
-    e->target = 0;
     e->base = 0;
     e->active = 0;
 }
 
 void dd_pitch_sweep_trigger(dd_pitch_sweep_env *e, int32_t base,
-                            int32_t target, int32_t attack_coeff,
-                            int32_t decay_coeff)
+                            int32_t target, int32_t decay_coeff)
 {
     e->base = base;
-    e->target = target;
     e->value = target - base;
-    e->attack_coeff = attack_coeff;
-    e->decay_coeff = decay_coeff;
-    e->active = 1;
+    e->decay_coeff = dd_clamp(decay_coeff, 0, DD_Q15_ONE);
+    e->active = (e->value != 0);
 }
 
 int32_t dd_pitch_sweep_step(dd_pitch_sweep_env *e)
 {
     if (!e->active)
         return e->base;
-    e->value = dd_mul_q15(e->value, e->decay_coeff);
+    /* Decay the magnitude so negative offsets round toward zero as well. */
+    if (e->value < 0)
+        e->value = -dd_mul_q15(-e->value, e->decay_coeff);
+    else
+        e->value = dd_mul_q15(e->value, e->decay_coeff);
     if (e->value >= -1 && e->value <= 1) {
         e->value = 0;
         e->active = 0;

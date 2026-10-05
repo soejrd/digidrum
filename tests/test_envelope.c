@@ -102,7 +102,7 @@ static void test_pitch_sweep(void)
     dd_pitch_sweep_init(&e);
     assert(e.active == 0);
 
-    dd_pitch_sweep_trigger(&e, 1000, 8000, 32700, 32600);
+    dd_pitch_sweep_trigger(&e, 1000, 8000, 32600);
     assert(e.active == 1);
 
     int32_t first = dd_pitch_sweep_step(&e);
@@ -114,9 +114,33 @@ static void test_pitch_sweep(void)
     for (i = 0; i < 500; ++i) {
         int32_t v = dd_pitch_sweep_step(&e);
         assert(v >= 1000 && v <= 8000);
-        assert(v <= prev + 1);
+        assert(v <= prev);
         prev = v;
     }
+    assert(e.active == 1);
+    for (i = 0; e.active && i < 3000; ++i) {
+        int32_t v = dd_pitch_sweep_step(&e);
+        assert(v >= 1000 && v <= prev);
+        prev = v;
+    }
+    assert(e.active == 0);
+    assert(dd_pitch_sweep_step(&e) == 1000);
+
+    dd_pitch_sweep_trigger(&e, 8000, 1000, 32600);
+    prev = dd_pitch_sweep_step(&e);
+    assert(prev > 1000 && prev < 8000);
+    for (i = 0; e.active && i < 3000; ++i) {
+        int32_t v = dd_pitch_sweep_step(&e);
+        assert(v >= prev && v <= 8000);
+        prev = v;
+    }
+    assert(e.active == 0);
+    assert(dd_pitch_sweep_step(&e) == 8000);
+
+    dd_pitch_sweep_trigger(&e, 1000, 8000, 0);
+    assert(dd_pitch_sweep_step(&e) == 1000);
+    assert(e.active == 0);
+    dd_pitch_sweep_trigger(&e, 1000, 1000, 32600);
     assert(e.active == 0);
 }
 

@@ -25,20 +25,17 @@ static inline int32_t dd_noise_next(dd_noise *n)
     n->state ^= n->state << 13;
     n->state ^= n->state >> 17;
     n->state ^= n->state << 5;
-    return (int32_t)(n->state >> 16) - (int32_t)(n->state & 0xFFFF);
+    return (int32_t)(int16_t)(n->state >> 16);
 }
 
 static inline int32_t dd_noise_q15(dd_noise *n)
 {
-    n->state ^= n->state << 13;
-    n->state ^= n->state >> 17;
-    n->state ^= n->state << 5;
-    return (int32_t)(n->state >> 16) - (int32_t)(n->state & 0xFFFF);
+    return dd_noise_next(n);
 }
 
 static inline int16_t dd_noise_s16(dd_noise *n)
 {
-    return (int16_t)(dd_noise_q15(n) >> 15);
+    return (int16_t)dd_noise_next(n);
 }
 
 #endif

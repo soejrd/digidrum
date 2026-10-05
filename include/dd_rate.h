@@ -58,17 +58,24 @@ static inline int32_t dd_interp_step(dd_interp *i, int32_t input)
 
 typedef struct {
     uint8_t tick;
+    uint8_t divisor;
 } dd_downsampler;
+
+static inline void dd_downsampler_init_rate(dd_downsampler *d, uint8_t divisor)
+{
+    d->tick = 0;
+    d->divisor = (divisor == 1 || divisor == 4) ? divisor : 2;
+}
 
 static inline void dd_downsampler_init(dd_downsampler *d)
 {
-    d->tick = 0;
+    dd_downsampler_init_rate(d, 2);
 }
 
 static inline int dd_downsampler_should_process(dd_downsampler *d)
 {
     ++d->tick;
-    if (d->tick >= 2) {
+    if (d->tick >= d->divisor) {
         d->tick = 0;
         return 1;
     }
