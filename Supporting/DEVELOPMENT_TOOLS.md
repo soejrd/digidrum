@@ -1,0 +1,19 @@
+# Development tools and references
+
+Checked against project pages on **2026-10-05**. “Local” describes the copies in this workspace; it does not mean they have been updated. Digidrum initially targets Digitakt Mk1 OS 1.53, so OS 1.54 support upstream is useful research, not an automatic change of target.
+
+| Project | Use for Digidrum | Current status and next check |
+| --- | --- | --- |
+| [elekloader](https://github.com/irpina/elekloader) ([local](../elekloader/)) | Build, link, conflict-check, and verify main-OS mods from the owner's stock OS file. Its core hooks and custom-machine support are the starting integration layer. | Local checkout: `91840b1` (2026-09-29), with OS 1.53 support. Upstream README now lists **1.53 and 1.54**. Review upstream changes and re-run build/lint checks before upgrading the local copy. Never patch the bootloader. |
+| [digiemu](https://github.com/irpina/digiemu) ([local](../digiemu/)) | Boot modified firmware, exercise pages, pattern and parameter-lock behavior, and inspect audio before hardware tests. | Local checkout: `3206402` (2026-09-25), with an existing local edit to `emu/gui.py`; preserve that edit during any update. Upstream explicitly tests Digitakt OS 1.53 and treats other releases as untested. Emulator timing is a guide, not proof of hardware headroom. |
+| [digihealth](https://github.com/irpina/digihealth) ([Sophie copy](../digisophie/diagnostics/digihealth/)) | Measure CPU/audio-render load and memory on the physical unit; evaluate FAST AUDIO when render time is limiting. | The local copy is bundled with DigiSophie and changes FAST AUDIO to **off by default**. Upstream now documents Digitakt OS **1.53 and 1.54**. Compare its source and behavior with the Sophie copy before updating; do not silently replace the local variant. |
+| [DigiFilter](https://github.com/DigiAlchemydsp/DigiFilter) | Reference for per-track filters, ColdFire DSP, FLTR page hooks, and measured block costs; possible source of filter ideas. | Work in progress for OS 1.53. Its README reports working band-pass and comb modes, with a remaining UI graph mismatch and a clipping caveat. Assess code and hook compatibility before reuse. |
+| [digi1_mods](https://github.com/gdeo607/digi1_mods) | Study its synth-machine pages, icons, modulation matrix, and `digichain` approach to combining machine mods. | Upstream covers OS 1.53/1.54. Its README marks several current mods as **not yet hardware tested**. Useful implementation reference, not a ready-made Digidrum foundation. |
+| [elektron-firmware-tool](https://github.com/mischa85/elektron-firmware-tool) | Independent inspection of `.syx` transport, sections, compression, and checksums; cross-check firmware packaging assumptions. | Helpful for research and byte-exact repacking checks. Elekloader remains the primary build path for Digidrum mods. |
+| [digigrain](https://github.com/lucykowal/digigrain) | Candidate synthesis reference to inspect. | The linked repository could not be fetched or independently identified in this check. Its architecture, target device, and usefulness are **unverified**; revisit when accessible. |
+
+## Project practices
+
+- Keep a known stock OS file, a reproducible mod build, and a tested recovery path. Use the emulator first, then digihealth and real audio captures for performance decisions.
+- Record the exact OS hash, tool commits, mod versions, test pattern, and hardware measurements for each result. Upstream compatibility claims and Digidrum's own measurements are different evidence.
+- Review developer notes and agent guidance in these projects, including the local [`elekloader/AGENTS.md`](../elekloader/AGENTS.md) and [`digiemu/CLAUDE.md`](../digiemu/CLAUDE.md). Check any upstream `.claude` skills or scripts for applicability, assumptions, and commands before adapting them into Digidrum's own instructions; do not copy them wholesale.

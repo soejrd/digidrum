@@ -1,0 +1,51 @@
+{
+ "id": "digidrum-health", "version": "0.1.0",
+ "title": "Digidrum performance monitor", "category": "Performance", "author": "irpina; adapted for Digidrum",
+ "license": "GPL-2.0-or-later",
+ "description": "Digidrum diagnostic build of digihealth. FAST AUDIO starts automatically after the UI is ready; SYSTEM INFO shows CPU, DSP and RAM in the top bar. Both can be toggled in SETTINGS. The read-only USB diagnostics channel uses SysEx device 0x7D.",
+ "device": "digitakt-mk1", "os": "1.53",
+ "sources": ["fastaudio.s", "sysinfo.s"],
+ "name_string": "digihealth",
+ "sites": [
+  {"addr": "0x40000438", "stock": "203cffffdfff", "op": "jsr", "target": "task_switch"},
+  {"addr": "0x400d52f0", "stock": "47f9401b89aa", "op": "jsr", "target": "hook_sysex"}
+ ],
+ "subscribe": [
+  {"event": "ev_settings", "fn": "si_settings", "order": 10},
+  {"event": "ev_settings", "fn": "fa_settings", "order": 20},
+  {"event": "ev_tick", "fn": "fa_tick", "order": 40},
+  {"event": "ev_tick", "fn": "si_tick", "order": 50},
+  {"event": "ev_draw", "fn": "si_draw", "order": 50},
+  {"event": "ev_render_in", "fn": "si_render_in", "order": 50},
+  {"event": "ev_render_out", "fn": "si_render_out", "order": 50}
+ ],
+ "collections": {"fa_copies": 16, "fa_fixups": 8},
+ "fast_audio": {
+  "block": ["0x400716c0", "0x4007629a"],
+  "sram": ["0x80003360", "0x80008000"],
+  "call_sites": [
+   ["0x40077e9a", "4eb9", "0x40074b9e"],
+   ["0x40077f76", "4eb9", "0x4007472a"],
+   ["0x40077f8e", "4eb9", "0x40075184"],
+   ["0x40077fa6", "4eb9", "0x400757fe"],
+   ["0x40077fc8", "4eb9", "0x40072478"],
+   ["0x40077fd4", "4bf9", "0x4007266e"],
+   ["0x40078024", "4eb9", "0x4007269c"],
+   ["0x40078078", "4eb9", "0x400716c0"],
+   ["0x40078088", "4eb9", "0x40073168"],
+   ["0x40078096", "4eb9", "0x40073304"],
+   ["0x400780a4", "47f9", "0x40072844"],
+   ["0x400780e0", "49f9", "0x4007269c"],
+   ["0x40078116", "4eb9", "0x4007234c"],
+   ["0x4007814a", "4eb9", "0x40071c20"],
+   ["0x40078366", "4eb9", "0x400723fc"]
+  ]
+ },
+ "copied": [{"lo": "0x400716c0", "hi": "0x4007629a", "to": "0x80003360"}],
+ "requires": ["core"],
+ "conflicts": ["digihealth"],
+ "resources": {
+  "regions": [{"name": "FAST AUDIO block copy", "lo": "0x80003360", "hi": "0x80007f3c"}],
+  "names": ["settings:FAST AUDIO", "settings:SYSTEM INFO", "sysex:0x7d"]
+ }
+}

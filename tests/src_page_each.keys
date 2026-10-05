@@ -1,0 +1,37 @@
+wait 1000
+press FUNC
+tap SRC
+release FUNC
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap YES
+tap YES
+tap SRC
+wait 500
+snap start
+turn A +5
+wait 800
+snap pitch
+turn B -10
+wait 800
+snap character
+turn C +5
+wait 800
+snap tone
+turn D +5
+wait 800
+snap punch
+turn E +5
+wait 800
+snap sweep
+turn F +5
+wait 800
+snap decay
+turn G +5
+wait 800
+snap drive
+turn H -5
+wait 800
+snap level

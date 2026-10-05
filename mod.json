@@ -1,0 +1,111 @@
+{
+  "id": "digidrum-spike",
+  "version": "0.1.0",
+  "license": "GPL-2.0-or-later",
+  "title": "Digidrum PULSE BD spike",
+  "category": "Synthesis",
+  "author": "Digidrum contributors; based on digiperc",
+  "description": "Experimental fixed-point synthesized bass-drum machine. Adapted from the topology of Mutable Instruments Plaits' MIT-licensed analog bass drum. Uses no sample; the normal Digitakt overdrive, envelope, filter, mixer and sends process its output.",
+  "device": "digitakt-mk1",
+  "os": "1.53",
+  "sources": ["glue.s", "digitakt.c", "percussion.c"],
+  "sites": [
+    {
+      "addr": "0x400657cc",
+      "stock": "7203202f0004",
+      "op": "jmp",
+      "target": "dp_layout"
+    },
+    {
+      "addr": "0x4000fe8a",
+      "stock": "222f00080c81000000a4",
+      "op": "jmp",
+      "target": "dp_lab_short"
+    },
+    {
+      "addr": "0x4000feac",
+      "stock": "222f00080c81000000a4",
+      "op": "jmp",
+      "target": "dp_lab_long"
+    },
+    {
+      "addr": "0x4000f324",
+      "stock": "4fefffec48d70c1c",
+      "op": "jmp",
+      "target": "dp_val_text"
+    },
+    {
+      "addr": "0x4000f2bc",
+      "stock": "4fefffec48d7007c",
+      "op": "jmp",
+      "target": "dp_knob_gfx"
+    },
+    {
+      "addr": "0x40065794",
+      "stock": "222f00040c81000000a4",
+      "op": "jmp",
+      "target": "dp_ui_rec"
+    },
+    {
+      "addr": "0x400657ee",
+      "stock": "222f00040c81000000a4",
+      "op": "jmp",
+      "target": "dp_pop_text"
+    },
+    {
+      "addr": "0x4000ff20",
+      "stock": "4eb940078f0c",
+      "op": "keep2",
+      "target": "dp_prange"
+    },
+    {
+      "addr": "0x400100c4",
+      "stock": "4eb940078f0c",
+      "op": "keep2",
+      "target": "dp_prange"
+    },
+    {
+      "addr": "0x4000f534",
+      "stock": "4eb940078f0c",
+      "op": "keep2",
+      "target": "dp_prange"
+    },
+    {
+      "addr": "0x4000f5fc",
+      "stock": "45f940078f0c",
+      "op": "keep2",
+      "target": "dp_prange_f"
+    },
+    {
+      "addr": "0x4018492c",
+      "stock": "400309b0",
+      "op": "ptr",
+      "target": "dp_pageset"
+    },
+    {
+      "addr": "0x4003b5b2",
+      "stock": "0c8200000087",
+      "op": "jmp",
+      "target": "dp_src_d_dispatch"
+    },
+    {
+      "addr": "0x40077fba",
+      "stock": "49f94199e444",
+      "op": "jsr",
+      "target": "dp_inject_s"
+    }
+  ],
+  "contribute": [
+    {
+      "to": "core_machines",
+      "order": 60,
+      "data": "00000000",
+      "relocs": [[0, "abs32", "sym:dp_machine", 0]]
+    }
+  ],
+  "requires": ["core"],
+  "conflicts": ["digineighbor", "digiperc", "digisophie"],
+  "resources": {
+    "names": ["machine:8"]
+  }
+}
