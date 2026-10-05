@@ -31,10 +31,34 @@ The project already has a working sample-free machine spike: a custom machine ca
 - Arithmetic: fixed-point, currently centered around Q15-style helpers.
 - Render block: 32 samples.
 - Custom machine audio can be injected before stock overdrive, after stock sample playback.
-- SRC page can expose eight stored parameter slots; current instrument convention uses seven synthesis controls plus level.
+- SRC page exposes eight stored parameter slots. PULSE BD uses seven synthesis controls plus level; TRX-BD, TRX-B2 and TRX-SD use all eight for synthesis. Their level is the stock track AMP control.
 - Parameter locks work for the tested custom parameter path in Digiemu.
 - Two tracks can trigger the custom machine in the same audio block in Digiemu.
 - Hardware performance is not yet established.
+
+## Phase 1 TRX voices and emulator build
+
+The TRX-BD, TRX-B2 and TRX-SD-inspired voices live in `machines/trx_md.c`.
+Each has eight machine controls in the manual's order; track level is separate.
+The firmware registers them as machine IDs 9, 10 and 11. PULSE BD retains ID 8.
+Run `make test cross-check cross-check-dsp` for host and ColdFire checks and
+`make demo` to create `out/trx-b2.wav`, `out/trx-bd.wav` and `out/trx-sd.wav`.
+
+Build the emulator firmware with the local elekloader and owner-supplied
+OS 1.53 file:
+
+```sh
+ELEKLOADER_CROSS=m68k-elf- PYTHONPATH=../elekloader ../digiemu/.venv/bin/python -m elekloader.sdk.build ../elekloader/mods/core --stock ../firmware/Digitakt_OS1.53_dist/Digitakt_OS1.53.syx --out out/core-build
+ELEKLOADER_CROSS=m68k-elf- PYTHONPATH=../elekloader ../digiemu/.venv/bin/python -m elekloader.sdk.build . --stock ../firmware/Digitakt_OS1.53_dist/Digitakt_OS1.53.syx --out out/trx-build
+PYTHONPATH=../elekloader ../digiemu/.venv/bin/python -m elekloader.lint out/trx-build/digidrum-spike-0.2.0.elemod --stock ../firmware/Digitakt_OS1.53_dist/Digitakt_OS1.53.syx --with out/core-build/core-2.1.elemod --json
+PYTHONPATH=../elekloader ../digiemu/.venv/bin/python -m elekloader.patch --stock ../firmware/Digitakt_OS1.53_dist/Digitakt_OS1.53.syx --mod out/core-build/core-2.1.elemod --mod out/trx-build/digidrum-spike-0.2.0.elemod --out out/Digitakt_OS1.53_DIGIDRUM_TRX.syx --version TRX1
+```
+
+Double-click `Open Digidrum.command` to import and launch that image in Digiemu.
+On this host, the October 5 setup reached Digiemu's cold boot and then the
+installed Unicorn native library raised `Illegal instruction` inside
+`unicorn.mem_map`; the emulator audio and UI behavior of TRX1 remains unverified.
+The SysEx patcher verified its unmodified sections and patched main image.
 
 ## Recommended document order
 

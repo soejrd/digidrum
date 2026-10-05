@@ -1,6 +1,7 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
 /* Digitakt Mk1 OS 1.53 adapter for the portable percussion kernel. */
 #include "percussion.h"
+#include "include/dd_trx_md.h"
 
 typedef uint8_t u8;
 typedef uint16_t u16;
@@ -9,6 +10,9 @@ typedef int32_t s32;
 typedef uint32_t u32;
 
 #define DP_MACHINE 8
+#define TRX_BD_MACHINE 9
+#define TRX_B2_MACHINE 10
+#define TRX_SD_MACHINE 11
 #define TRACKS 8
 #define TBUF(t) ((s32 *)(uintptr_t)(0x80001a18u + 128u * (u32)(t)))
 #define MACH(t) (*(volatile const u8 *)(uintptr_t)(0x800018bcu + (u32)(t)))
@@ -28,6 +32,8 @@ typedef uint32_t u32;
 #define P_LEV 14
 
 static struct dp_voice dp_voices[TRACKS];
+static dd_trx_voice trx_voices[TRACKS];
+static u8 last_machine[TRACKS];
 
 /* The SRC view treats slot D as the sample parameter. For PULSE BD, pass
  * only that slot through the stock generic setter at 0x40030a28. */
@@ -44,8 +50,8 @@ extern u32 dp_page_m;
 void dp_pageset(void *view, s32 param, s32 delta, s32 flag, u8 *changed)
 {
     dp_pageset_t stock = (dp_pageset_t)(uintptr_t)0x400309b0u;
-    if (param == 10 &&
-        ((dp_machineof_t)(uintptr_t)0x4002b5d4u)(view) == DP_MACHINE) {
+    s32 machine = ((dp_machineof_t)(uintptr_t)0x4002b5d4u)(view);
+    if (param == 10 && machine >= DP_MACHINE && machine <= TRX_SD_MACHINE) {
         void **view_vt = *(void ***)view;
         void *track_ref = *(void **)((u8 *)view + 116);
         s32 track = ((dp_trackof_t)(uintptr_t)0x4001d24eu)(track_ref);
@@ -128,25 +134,47 @@ static void dp_read_params(s32 track, struct dp_params *p)
     p->level = (u16)dp_q15_from_u7(dp_param_u8(track, P_LEV));
 }
 
+static void dp_read_trx_params(s32 track, dd_trx_params *p)
+{
+    u32 i;
+    for (i = 0; i < 8u; ++i)
+        p->control[i] = (u16)dp_q15_from_u7(dp_param_u8(track, (s32)(i * 2u)));
+    /* SRC H is the eighth synth control. The stock track AMP path follows
+     * our injection and supplies the user-facing track level. */
+    p->level = 32767;
+}
+
 void dp_inject(void)
 {
     u32 triggers = TRIG_BITS;
     s32 track;
     for (track = 0; track < TRACKS; ++track) {
         struct dp_params params;
+        dd_trx_params trx_params;
         s32 *output;
-        if (MACH(track) != DP_MACHINE) {
-            if (dp_voices[track].active)
+        u8 machine = MACH(track);
+
+        if (machine != last_machine[track]) {
+            if (machine == DP_MACHINE)
                 dp_voice_init(&dp_voices[track]);
+            else if (machine >= TRX_BD_MACHINE && machine <= TRX_SD_MACHINE)
+                dd_trx_init(&trx_voices[track], (dd_trx_kind)(machine - TRX_BD_MACHINE));
+            last_machine[track] = machine;
+        }
+        if (machine < DP_MACHINE || machine > TRX_SD_MACHINE) {
             continue;
         }
         output = TBUF(track);
-        dp_read_params(track, &params);
-        dp_voice_render(
-            &dp_voices[track],
-            &params,
-            (triggers & (1u << track)) != 0,
-            output,
-            DP_BLOCK_SIZE);
+        if (machine == DP_MACHINE) {
+            dp_read_params(track, &params);
+            dp_voice_render(&dp_voices[track], &params,
+                            (triggers & (1u << track)) != 0,
+                            output, DP_BLOCK_SIZE);
+        } else {
+            dp_read_trx_params(track, &trx_params);
+            dd_trx_render(&trx_voices[track], &trx_params,
+                          (triggers & (1u << track)) != 0,
+                          output, DP_BLOCK_SIZE);
+        }
     }
 }

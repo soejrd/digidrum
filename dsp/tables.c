@@ -1,5 +1,5 @@
 /* SPDX-License-Identifier: MIT */
-#include "dd_tables.h"
+#include "../include/dd_tables.h"
 
 const int16_t dd_sine_tab[DD_SINE_SIZE] = {
         0,    402,    804,   1206,   1608,   2009,   2410,   2811,

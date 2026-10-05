@@ -1,14 +1,14 @@
 {
   "id": "digidrum-spike",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "license": "GPL-2.0-or-later",
-  "title": "Digidrum PULSE BD spike",
+  "title": "Digidrum percussion machines",
   "category": "Synthesis",
   "author": "Digidrum contributors; based on digiperc",
-  "description": "Experimental fixed-point synthesized bass-drum machine. Adapted from the topology of Mutable Instruments Plaits' MIT-licensed analog bass drum. Uses no sample; the normal Digitakt overdrive, envelope, filter, mixer and sends process its output.",
+  "description": "PULSE BD plus three original, fixed-point TRX-inspired percussion voices with eight synth controls each: TRX-BD, TRX-B2 and TRX-SD. Rendered without samples through the Digitakt track effects path.",
   "device": "digitakt-mk1",
   "os": "1.53",
-  "sources": ["glue.s", "digitakt.c", "percussion.c"],
+  "sources": ["glue.s", "digitakt.c", "percussion.c", "machines/trx_md.c", "dsp/osc.c", "dsp/tables.c", "dsp/envelope.c"],
   "sites": [
     {
       "addr": "0x400657cc",
@@ -101,11 +101,29 @@
       "order": 60,
       "data": "00000000",
       "relocs": [[0, "abs32", "sym:dp_machine", 0]]
+    },
+    {
+      "to": "core_machines",
+      "order": 61,
+      "data": "00000000",
+      "relocs": [[0, "abs32", "sym:dp_machine_bd", 0]]
+    },
+    {
+      "to": "core_machines",
+      "order": 62,
+      "data": "00000000",
+      "relocs": [[0, "abs32", "sym:dp_machine_b2", 0]]
+    },
+    {
+      "to": "core_machines",
+      "order": 63,
+      "data": "00000000",
+      "relocs": [[0, "abs32", "sym:dp_machine_sd", 0]]
     }
   ],
   "requires": ["core"],
   "conflicts": ["digineighbor", "digiperc", "digisophie"],
   "resources": {
-    "names": ["machine:8"]
+    "names": ["machine:8", "machine:9", "machine:10", "machine:11"]
   }
 }

@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: MIT */
-#include "dd_osc.h"
-#include "dd_tables.h"
-#include "dd_fixed.h"
+#include "../include/dd_osc.h"
+#include "../include/dd_tables.h"
+#include "../include/dd_fixed.h"
 
 int32_t dd_osc_sine(dd_osc *o, uint32_t inc)
 {

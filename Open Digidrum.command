@@ -1,17 +1,17 @@
 #!/bin/zsh
-# Double-click this file in Finder to open the Digidrum spike in Digiemu.
+# Double-click this file in Finder to open Digidrum TRX1 in Digiemu.
 set -u
 
 here="${0:A:h}"
 emu="$here/../digiemu"
 python="$emu/.venv/bin/python"
-firmware="$here/out/Digitakt_OS1.53_DIGIDRUM_HEALTH_D.syx"
-data="$here/out/emulator"
+firmware="$here/out/Digitakt_OS1.53_DIGIDRUM_TRX.syx"
+data="$here/out/trx-emulator"
 
 if [[ ! -x "$python" || ! -f "$firmware" ]]; then
   print 'Digidrum needs the local Digiemu Python and the built firmware.'
   print "Expected firmware: $firmware"
-  print 'See SPIKE.md for the build commands.'
+  print 'See README.md for the build commands.'
   read '?Press Return to close...'
   exit 1
 fi

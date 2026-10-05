@@ -50,10 +50,16 @@ out/test_param_cache: include/dd_param_cache.h include/dd_machine.h tests/test_p
 out/test_benchmark_voice: tools/benchmark_voice.c tools/benchmark_voice.h include/dd_param_cache.h dsp/osc.c dsp/tables.c dsp/envelope.c tests/test_benchmark_voice.c | out
 	$(CC) $(CFLAGS) $(INCFLAGS) tools/benchmark_voice.c dsp/osc.c dsp/tables.c dsp/envelope.c tests/test_benchmark_voice.c -o $@
 
+out/test_trx_md: machines/trx_md.c include/dd_trx_md.h dsp/osc.c dsp/tables.c dsp/envelope.c tests/test_trx_md.c | out
+	$(CC) $(CFLAGS) $(INCFLAGS) machines/trx_md.c dsp/osc.c dsp/tables.c dsp/envelope.c tests/test_trx_md.c -o $@
+
 out/render_benchmark: tools/benchmark_voice.c tools/benchmark_voice.h include/dd_param_cache.h dsp/osc.c dsp/tables.c dsp/envelope.c tools/render_benchmark.c | out
 	$(CC) $(CFLAGS) $(INCFLAGS) tools/benchmark_voice.c dsp/osc.c dsp/tables.c dsp/envelope.c tools/render_benchmark.c -o $@
 
-test: out/test_percussion out/test_fixed out/test_tables out/test_osc out/test_envelope out/test_noise out/test_filter out/test_resonator out/test_rate out/test_param_cache out/test_benchmark_voice
+out/render_trx_md: tools/render_trx_md.c machines/trx_md.c include/dd_trx_md.h dsp/osc.c dsp/tables.c dsp/envelope.c | out
+	$(CC) $(CFLAGS) $(INCFLAGS) tools/render_trx_md.c machines/trx_md.c dsp/osc.c dsp/tables.c dsp/envelope.c -o $@
+
+test: out/test_percussion out/test_fixed out/test_tables out/test_osc out/test_envelope out/test_noise out/test_filter out/test_resonator out/test_rate out/test_param_cache out/test_benchmark_voice out/test_trx_md
 	./out/test_percussion
 	./out/test_fixed
 	./out/test_tables
@@ -65,8 +71,9 @@ test: out/test_percussion out/test_fixed out/test_tables out/test_osc out/test_e
 	./out/test_rate
 	./out/test_param_cache
 	./out/test_benchmark_voice
+	./out/test_trx_md
 
-dsp-test: out/test_fixed out/test_tables out/test_osc out/test_envelope out/test_noise out/test_filter out/test_resonator out/test_rate out/test_param_cache out/test_benchmark_voice
+dsp-test: out/test_fixed out/test_tables out/test_osc out/test_envelope out/test_noise out/test_filter out/test_resonator out/test_rate out/test_param_cache out/test_benchmark_voice out/test_trx_md
 	./out/test_fixed
 	./out/test_tables
 	./out/test_osc
@@ -77,18 +84,25 @@ dsp-test: out/test_fixed out/test_tables out/test_osc out/test_envelope out/test
 	./out/test_rate
 	./out/test_param_cache
 	./out/test_benchmark_voice
+	./out/test_trx_md
 
-demo: out/render_demo out/render_benchmark
+demo: out/render_demo out/render_benchmark out/render_trx_md
 	./out/render_demo
 	./out/render_benchmark
+	./out/render_trx_md
 
 cross-check: | out
 	mkdir -p out/cross
 	$(CROSS)as -mcpu=54455 -I . -o out/cross/glue.o glue.s
 	$(CROSS)gcc $(CROSS_CFLAGS) -I . -c digitakt.c -o out/cross/digitakt.o
 	$(CROSS)gcc $(CROSS_CFLAGS) -I . -c percussion.c -o out/cross/percussion.o
+	$(CROSS)gcc $(CROSS_CFLAGS) $(INCFLAGS) -c machines/trx_md.c -o out/cross/trx_md.o
+	$(CROSS)gcc $(CROSS_CFLAGS) $(INCFLAGS) -c dsp/osc.c -o out/cross/osc.o
+	$(CROSS)gcc $(CROSS_CFLAGS) $(INCFLAGS) -c dsp/tables.c -o out/cross/tables.o
+	$(CROSS)gcc $(CROSS_CFLAGS) $(INCFLAGS) -c dsp/envelope.c -o out/cross/envelope.o
 	$(CROSS)ld -r -d -T tools/elekloader-mod.ld -o out/cross/digidrum.o \
-		out/cross/glue.o out/cross/digitakt.o out/cross/percussion.o
+		out/cross/glue.o out/cross/digitakt.o out/cross/percussion.o \
+		out/cross/trx_md.o out/cross/osc.o out/cross/tables.o out/cross/envelope.o
 	@! $(CROSS)nm -u out/cross/digidrum.o | grep .
 	$(CROSS)size -A out/cross/digidrum.o
 
@@ -99,8 +113,9 @@ cross-check-dsp: | out
 	$(CROSS)gcc $(CROSS_CFLAGS) $(INCFLAGS) -c dsp/envelope.c -o out/cross/envelope.o
 	$(CROSS)gcc $(CROSS_CFLAGS) $(INCFLAGS) -c dsp/filter.c -o out/cross/filter.o
 	$(CROSS)gcc $(CROSS_CFLAGS) $(INCFLAGS) -c tools/benchmark_voice.c -o out/cross/benchmark_voice.o
-	$(CROSS)size -A out/cross/tables.o out/cross/osc.o out/cross/envelope.o out/cross/filter.o out/cross/benchmark_voice.o
+	$(CROSS)gcc $(CROSS_CFLAGS) $(INCFLAGS) -c machines/trx_md.c -o out/cross/trx_md.o
+	$(CROSS)size -A out/cross/tables.o out/cross/osc.o out/cross/envelope.o out/cross/filter.o out/cross/benchmark_voice.o out/cross/trx_md.o
 
 clean:
-	rm -f out/test_* out/render_demo out/render_benchmark out/pulse-bd.wav out/benchmark-voice.wav
+	rm -f out/test_* out/render_demo out/render_benchmark out/render_trx_md out/pulse-bd.wav out/benchmark-voice.wav out/trx-b2.wav out/trx-bd.wav out/trx-sd.wav
 	rm -rf out/cross

@@ -91,7 +91,7 @@ static inline int32_t dd_bit_quantize(int32_t x, int32_t bits)
     if (bits < 1)
         bits = 1;
     step_shift = 16 - bits;
-    return (x >> step_shift) << step_shift;
+    return (x >> step_shift) * (1 << step_shift);
 }
 
 #endif

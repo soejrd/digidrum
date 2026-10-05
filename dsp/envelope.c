@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: MIT */
-#include "dd_envelope.h"
-#include "dd_fixed.h"
+#include "../include/dd_envelope.h"
+#include "../include/dd_fixed.h"
 
 void dd_ahd_env_init(dd_ahd_env *e)
 {
