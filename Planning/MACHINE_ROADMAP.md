@@ -7,7 +7,7 @@ The goal is not byte-identical Machinedrum emulation. The goal is a compact fami
 Before expanding the synthesis library, close the workflow and persistence risks exposed by the first spike.
 
 - [*] verify machine selection and switching across tracks
-- [ ] verify all seven synthesis parameters plus level remain stored and lockable
+- [*] verify all seven synthesis parameters plus level remain stored and lockable
 - [ ] verify project save/reload preserves machine IDs and parameter values
 - [ ] verify sound/preset recall where applicable
 - [ ] verify copy/paste and pattern workflows

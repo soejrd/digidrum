@@ -3,25 +3,79 @@ CFLAGS ?= -std=c99 -O2 -Wall -Wextra -Werror
 CROSS ?= m68k-elf-
 CROSS_CFLAGS = -mcpu=54455 -O2 -ffreestanding -fno-builtin -nostdlib \
 	-fno-pic -fno-pie -fomit-frame-pointer -Wall -Wextra -Werror
+INCFLAGS = -I . -I include -I tools
 
-.PHONY: all test demo cross-check clean
+DSP_SOURCES = dsp/tables.c dsp/osc.c dsp/envelope.c dsp/filter.c
 
-all: test
+.PHONY: all test demo cross-check cross-check-dsp clean
+
+all: test dsp-test
 
 out:
 	mkdir -p out
 
 out/test_percussion: percussion.c percussion.h tests/test_percussion.c | out
-	$(CC) $(CFLAGS) percussion.c tests/test_percussion.c -o $@
+	$(CC) $(CFLAGS) -I . percussion.c tests/test_percussion.c -o $@
 
 out/render_demo: percussion.c percussion.h tools/render_demo.c | out
-	$(CC) $(CFLAGS) percussion.c tools/render_demo.c -o $@
+	$(CC) $(CFLAGS) -I . percussion.c tools/render_demo.c -o $@
 
-test: out/test_percussion
+out/test_fixed: tests/test_fixed.c | out
+	$(CC) $(CFLAGS) $(INCFLAGS) tests/test_fixed.c -o $@
+
+out/test_tables: dsp/tables.c include/dd_tables.h tests/test_tables.c | out
+	$(CC) $(CFLAGS) $(INCFLAGS) dsp/tables.c tests/test_tables.c -o $@
+
+out/test_osc: dsp/osc.c dsp/tables.c include/dd_osc.h include/dd_tables.h tests/test_osc.c | out
+	$(CC) $(CFLAGS) $(INCFLAGS) dsp/osc.c dsp/tables.c tests/test_osc.c -o $@
+
+out/test_envelope: dsp/envelope.c include/dd_envelope.h tests/test_envelope.c | out
+	$(CC) $(CFLAGS) $(INCFLAGS) dsp/envelope.c tests/test_envelope.c -o $@
+
+out/test_noise: tests/test_noise.c | out
+	$(CC) $(CFLAGS) $(INCFLAGS) tests/test_noise.c -o $@
+
+out/test_filter: dsp/filter.c include/dd_filter.h tests/test_filter.c | out
+	$(CC) $(CFLAGS) $(INCFLAGS) dsp/filter.c tests/test_filter.c -o $@
+
+out/test_resonator: tests/test_resonator.c | out
+	$(CC) $(CFLAGS) $(INCFLAGS) tests/test_resonator.c -o $@
+
+out/test_rate: tests/test_rate.c | out
+	$(CC) $(CFLAGS) $(INCFLAGS) tests/test_rate.c -o $@
+
+out/test_benchmark_voice: tools/benchmark_voice.c tools/benchmark_voice.h dsp/osc.c dsp/tables.c dsp/envelope.c tests/test_benchmark_voice.c | out
+	$(CC) $(CFLAGS) $(INCFLAGS) tools/benchmark_voice.c dsp/osc.c dsp/tables.c dsp/envelope.c tests/test_benchmark_voice.c -o $@
+
+out/render_benchmark: tools/benchmark_voice.c tools/benchmark_voice.h dsp/osc.c dsp/tables.c dsp/envelope.c tools/render_benchmark.c | out
+	$(CC) $(CFLAGS) $(INCFLAGS) tools/benchmark_voice.c dsp/osc.c dsp/tables.c dsp/envelope.c tools/render_benchmark.c -o $@
+
+test: out/test_percussion out/test_fixed out/test_tables out/test_osc out/test_envelope out/test_noise out/test_filter out/test_resonator out/test_rate out/test_benchmark_voice
 	./out/test_percussion
+	./out/test_fixed
+	./out/test_tables
+	./out/test_osc
+	./out/test_envelope
+	./out/test_noise
+	./out/test_filter
+	./out/test_resonator
+	./out/test_rate
+	./out/test_benchmark_voice
 
-demo: out/render_demo
+dsp-test: out/test_fixed out/test_tables out/test_osc out/test_envelope out/test_noise out/test_filter out/test_resonator out/test_rate out/test_benchmark_voice
+	./out/test_fixed
+	./out/test_tables
+	./out/test_osc
+	./out/test_envelope
+	./out/test_noise
+	./out/test_filter
+	./out/test_resonator
+	./out/test_rate
+	./out/test_benchmark_voice
+
+demo: out/render_demo out/render_benchmark
 	./out/render_demo
+	./out/render_benchmark
 
 cross-check: | out
 	mkdir -p out/cross
@@ -33,6 +87,15 @@ cross-check: | out
 	@! $(CROSS)nm -u out/cross/digidrum.o | grep .
 	$(CROSS)size -A out/cross/digidrum.o
 
+cross-check-dsp: | out
+	mkdir -p out/cross
+	$(CROSS)gcc $(CROSS_CFLAGS) $(INCFLAGS) -c dsp/tables.c -o out/cross/tables.o
+	$(CROSS)gcc $(CROSS_CFLAGS) $(INCFLAGS) -c dsp/osc.c -o out/cross/osc.o
+	$(CROSS)gcc $(CROSS_CFLAGS) $(INCFLAGS) -c dsp/envelope.c -o out/cross/envelope.o
+	$(CROSS)gcc $(CROSS_CFLAGS) $(INCFLAGS) -c dsp/filter.c -o out/cross/filter.o
+	$(CROSS)gcc $(CROSS_CFLAGS) $(INCFLAGS) -c tools/benchmark_voice.c -o out/cross/benchmark_voice.o
+	$(CROSS)size -A out/cross/tables.o out/cross/osc.o out/cross/envelope.o out/cross/filter.o out/cross/benchmark_voice.o
+
 clean:
-	rm -f out/test_percussion out/render_demo out/pulse-bd.wav
+	rm -f out/test_* out/render_demo out/render_benchmark out/pulse-bd.wav out/benchmark-voice.wav
 	rm -rf out/cross
