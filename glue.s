@@ -1,5 +1,5 @@
 | SPDX-License-Identifier: GPL-2.0-or-later
-| PULSE BD, TRX and EFM machine pages, Digitakt Mk1 OS 1.53 render hook.
+| TRX and EFM machine pages, Digitakt Mk1 OS 1.53 render hook.
 
         .section .run, "ax"
 
@@ -20,9 +20,6 @@ dp_inject_s:
 | render ID leaves an empty stock playback window for the injected voice.
         .equ    BMP_VT, 0x401b73b4
         .balign 4
-        .globl  dp_machine
-dp_machine:
-        .long   8, dp_name, dp_short, dp_icon_bmp, 3, 8
         .globl  dp_machine_bd, dp_machine_b2, dp_machine_sd
         .globl  dp_machine_ch, dp_machine_oh, dp_machine_cy
         .globl  dp_machine_rs, dp_machine_cb, dp_machine_cl
@@ -64,10 +61,6 @@ dp_machine_efm_hh:
 dp_machine_efm_cy:
         .long   25, dp_name_efm_cy, dp_short_efm_cy, dp_icon_bmp, 3, 25
 
-dp_name:
-        .asciz  "PULSE BD"
-dp_short:
-        .asciz  "PBD"
 dp_name_bd:   .asciz "TRX-BD"
 dp_short_bd:  .asciz "TBD"
 dp_name_b2:   .asciz "TRX-B2"
@@ -116,17 +109,16 @@ dp_icon_mask:
         .long   0xfe000000, 0xfe000000, 0xfe000000, 0xfe000000
         .long   0xfe000000, 0xfe000000, 0xfe000000
 
-| ---- Dedicated PULSE BD SRC page -------------------------------------------
+| ---- Synth machine SRC page -------------------------------------------------
 | The eight values remain in SLICE's storage slots, so sounds and parameter
-| locks keep working through Core 2.1.  Their presentation is wholly PULSE
-| BD's: eight useful controls, ordinary round dials, and custom names.
-        .equ    DP_ID,       8
+| locks keep working through Core 2.1.
+        .equ    DP_ID,       9
         .equ    DP_LAST,     25
 
 | Encoder D reaches the sample browser from the SRC encoder dispatcher,
 | before the SRC page setter. At 0x4003b5b2, d2 is the selected parameter
 | (0x87 for D), a2 is the SRC view, and a0 is the ordinary edit helper.
-| Branch to the ordinary path only for machine 8 + parameter 0x87.
+| Branch to the ordinary path only for our machines + parameter 0x87.
         .globl  dp_src_d_dispatch
 dp_src_d_dispatch:
         cmpi.l  #0x87, %d2
@@ -159,7 +151,7 @@ dp_src_d_dispatch:
         .equ    P_LEV,       0x8b
 
 | 0x400657cc(machine): remember the page's machine and return a private copy
-| of SLICE's complete eight-control layout for PULSE BD.
+| of SLICE's complete eight-control layout for our machines.
         .globl  dp_layout
 dp_layout:
         move.l  4(%sp), %d0
@@ -184,8 +176,7 @@ dp_layout:
 3:      move.l  #dp_lay, %d0
         rts
 
-| Return a custom label for each of P_TUNE..P_LEV while PULSE BD's page is
-| active.  The stock functions are resumed for every other page.
+| Return a custom label for each of P_TUNE..P_LEV on our machines.
         .globl  dp_lab_short, dp_lab_long
 dp_lab_short:
         lea     dp_short_tab, %a0
@@ -208,7 +199,7 @@ dp_lab_long:
 dp_lab_pick:
         move.l  dp_page_m, %d1
         subi.l  #DP_ID, %d1
-        cmpi.l  #17, %d1
+        cmpi.l  #16, %d1
         bhi.s   8f
         mulu.w  #32, %d1               | 8 pointers per machine
         adda.l  %d1, %a0
@@ -230,56 +221,14 @@ dp_is_control:
         bhi.s   8f
         move.l  dp_page_m, %d1
         subi.l  #DP_ID, %d1
-        cmpi.l  #17, %d1
+        cmpi.l  #16, %d1
         bhi.s   8f
         moveq   #1, %d1
         rts
 8:      moveq   #0, %d1
         rts
 
-| CHARACTER is the only non-numeric value: CLEAN, SWEEP, PUNCH or BOTH.
-dp_is_character:
-        cmpi.l  #P_PLAY, %d0
-        bne.s   8f
-        moveq   #DP_ID, %d1
-        cmp.l   dp_page_m, %d1
-        bne.s   8f
-        moveq   #1, %d1
-        rts
-8:      moveq   #0, %d1
-        rts
-
-        .globl  dp_val_text
-dp_val_text:
-        move.l  8(%sp), %d0
-        bsr.w   dp_is_character
-        beq.s   1f
-        move.l  12(%sp), -(%sp)
-        move.l  20(%sp), -(%sp)
-        jsr     dp_fmt_character
-        addq.l  #8, %sp
-        rts
-1:      lea     -20(%sp), %sp
-        movem.l %d2-%d4/%a2-%a3, (%sp)
-        jmp     0x4000f32c
-
-        .globl  dp_pop_text
-dp_pop_text:
-        move.l  4(%sp), %d0
-        bsr.w   dp_is_character
-        beq.s   1f
-        move.l  8(%sp), -(%sp)
-        pea     dp_txt
-        jsr     dp_fmt_character
-        addq.l  #8, %sp
-        rts
-1:      move.l  4(%sp), %d1
-        cmpi.l  #164, %d1
-        jmp     0x400657f8
-
-| All controls except PITCH use BR's ordinary round-dial drawing.  Scale the
-| four-position CHARACTER value across the dial instead of drawing it in the
-| first three pixels of a 0..127 arc.
+| All controls except PITCH use BR's ordinary round-dial drawing.
         .globl  dp_knob_gfx
 dp_knob_gfx:
         move.l  8(%sp), %d0
@@ -287,15 +236,7 @@ dp_knob_gfx:
         beq.s   2f
         cmpi.l  #P_TUNE, %d0
         beq.s   2f
-        cmpi.l  #P_PLAY, %d0
-        bne.s   1f
-        move.l  dp_page_m, %d1
-        cmpi.l  #DP_ID, %d1
-        bne.s   1f
-        move.l  12(%sp), %d0
-        mulu.w  #42, %d0
-        move.l  %d0, 12(%sp)
-1:      move.l  #P_BR, %d0
+        move.l  #P_BR, %d0
         move.l  %d0, 8(%sp)
 2:      lea     -20(%sp), %sp
         movem.l %d2-%d6, (%sp)
@@ -317,8 +258,7 @@ dp_ui_rec:
         jmp     0x4006579e
 
 | A parameter range lookup reaches here from the page's setter, stepper,
-| clamp and validator.  Restrict changes to the PULSE BD page object and give
-| CHARACTER 0..3 and the six continuous macro controls 0..127.
+| clamp and validator.  Restrict changes to our machine pages.
         .globl  dp_prange, dp_prange_f
 dp_prange:
         movea.l %a2, %a1
@@ -351,23 +291,7 @@ dp_prange_f:
         blt.w   9f
         cmpi.l  #DP_LAST, %d0
         bgt.w   9f
-        cmpi.l  #DP_ID, %d0
-        bne.s   8f
-        cmpi.l  #P_PLAY, %d1
-        bcs.s   9f
-        subi.l  #DP_ID, %d0
-        mulu.w  #56, %d0               | 7 range pairs per machine
-        subi.l  #P_PLAY, %d1
-        lsl.l   #3, %d1
-        add.l   %d0, %d1
-        lea     dp_range_tab, %a1
-        clr.l   (%a0)
-        move.l  0(%a1,%d1.l), %d0
-        move.l  %d0, 4(%a0)
-        move.l  4(%a1,%d1.l), %d0
-        move.l  %d0, 8(%a0)
-        bra.s   9f
-8:      cmpi.l  #18, %d0
+        cmpi.l  #18, %d0
         bge.s   7f
         subi.l  #9, %d0
         mulu.w  #8, %d0
@@ -393,8 +317,6 @@ dp_prange_f:
 
         .balign 4
 dp_short_tab:
-        .long   dp_s_pitch, dp_s_char, dp_s_tone, dp_s_punch
-        .long   dp_s_sweep, dp_s_decay, dp_s_drive, dp_s_level
         .long   dp_s_ptch, dp_s_dec, dp_s_ramp, dp_s_rdec
         .long   dp_s_strt, dp_s_nois, dp_s_harm, dp_s_clip
         .long   dp_s_ptch, dp_s_dec, dp_s_ramp, dp_s_hold
@@ -430,8 +352,6 @@ dp_short_tab:
         .long   dp_s_ptch, dp_s_dec, dp_s_fb, dp_s_hpf
         .long   dp_s_mod, dp_s_mfrq, dp_s_mdec, dp_s_none
 dp_long_tab:
-        .long   dp_l_pitch, dp_l_char, dp_l_tone, dp_l_punch
-        .long   dp_l_sweep, dp_l_decay, dp_l_drive, dp_l_level
         .long   dp_l_ptch, dp_l_dec, dp_l_ramp, dp_l_rdec
         .long   dp_l_strt, dp_l_nois, dp_l_harm, dp_l_clip
         .long   dp_l_ptch, dp_l_dec, dp_l_ramp, dp_l_hold
@@ -466,32 +386,8 @@ dp_long_tab:
         .long   dp_l_mod, dp_l_mfrq, dp_l_mdec, dp_l_fb
         .long   dp_l_ptch, dp_l_dec, dp_l_fb, dp_l_hpf
         .long   dp_l_mod, dp_l_mfrq, dp_l_mdec, dp_l_none
-| {maximum, default}, 8.8 values, for PLAY through LEV.
-dp_range_tab:
-        .long   0x0300, 0x0300          | CHARACTER
-        .long   0x7f00, 0x5000          | TONE
-        .long   0x7f00, 0x2800          | PUNCH
-        .long   0x7f00, 0x4000          | SWEEP
-        .long   0x7f00, 0x4800          | DECAY
-        .long   0x7f00, 0x2000          | DRIVE
-        .long   0x7f00, 0x6400          | LEVEL
-
-dp_s_pitch: .asciz "PITCH"
-dp_s_char:  .asciz "CHAR"
 dp_s_tone:  .asciz "TONE"
-dp_s_punch: .asciz "PUNCH"
-dp_s_sweep: .asciz "SWEEP"
-dp_s_decay: .asciz "DECAY"
-dp_s_drive: .asciz "DRIVE"
-dp_s_level: .asciz "LEVEL"
-dp_l_pitch: .asciz "Pitch"
-dp_l_char:  .asciz "Character"
 dp_l_tone:  .asciz "Tone"
-dp_l_punch: .asciz "Punch"
-dp_l_sweep: .asciz "Pitch Sweep"
-dp_l_decay: .asciz "Decay"
-dp_l_drive: .asciz "Drive"
-dp_l_level: .asciz "Level"
 dp_s_ptch:  .asciz "PTCH"
 dp_s_dec:   .asciz "DEC"
 dp_s_ramp:  .asciz "RAMP"

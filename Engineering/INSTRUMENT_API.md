@@ -200,14 +200,14 @@ New instruments for digidrum should be written in **C (C99 standard)** with fixe
 - The digidrum project targets the **Motorola ColdFire 54455 CPU** (m68k architecture) on the original Digitakt Mk1
 - Uses the cross-compiler `m68k-elf-gcc` with specific embedded flags
 - Fixed-point Q15 arithmetic is required for real-time audio processing within the CPU's constraints
-- All existing instruments (percussion, digiperc, digisophie, digineighbor) are written in C
+- The current TRX and EFM instruments are written in C
 
 ### Fixed-Point Arithmetic
 
 - **Q15 format**: 16-bit signed values with implicit binary point
 - Parameters range: 0..32767 (unsigned Q15)
 - Audio values: ±32767 (clamped 16-bit)
-- Multiplication macro: `(a * b) >> 15` (see `dp_mul_q15` in `percussion.c`)
+- Multiplication macro: `(a * b) >> 15` (see the shared helpers in `include/dd_fixed.h`)
 - No 64-bit helpers on the ColdFire target — all operations must fit in 32-bit
 
 ## 11. Integration and Related Projects
@@ -222,14 +222,14 @@ New instruments for digidrum should be written in **C (C99 standard)** with fixe
 
 ### Related Projects
 
-- `digiperc/` — percussion synthesis (PULSE BD, etc.)
+- `digiperc/` — earlier percussion synthesis experiments
 - `digisophie/` — custom SRC machine using Digitakt's audio path
 - `digineighbor/` — another drum instrument
 - `schwung-sophie/` — VST3 plugin version of sophie DSP
 
 ### See Also
 
-- `digidrum/percussion.c` — existing instrument implementation
-- `digidrum/percussion.h` — header with data structures
+- `digidrum/machines/` — current instrument implementations
+- `digidrum/include/` — shared machine interfaces and DSP helpers
 - `digidrum/Makefile` — build configuration
 - `digidrum/glue.s` — assembly glue code for integration

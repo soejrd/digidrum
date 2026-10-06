@@ -49,8 +49,8 @@ the DSP algorithms are original behavioral approximations.
 They pass deterministic, bounds, control-response and eight-voice host tests,
 and cross-compile for ColdFire. WAV demos are available via `make demo`.
 They are registered as Digitakt machine IDs 9–11, using all eight SRC slots;
-PULSE BD remains ID 8. The SDK built, linted and patched the combined TRX1
-firmware. Digiemu cold boot is currently blocked by a native Unicorn
+Machine ID 8 is now unregistered; TRX and EFM retain IDs 9–25. The SDK built,
+linted and patched the combined firmware. Digiemu cold boot is currently blocked by a native Unicorn
 `Illegal instruction` on this host, so UI/audio behavior remains unverified;
 Phase 0A platform correctness remains a separate gate.
 

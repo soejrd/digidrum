@@ -1,14 +1,14 @@
 {
   "id": "digidrum-spike",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "license": "GPL-2.0-or-later",
   "title": "Digidrum percussion machines",
   "category": "Synthesis",
   "author": "Digidrum contributors; based on digiperc",
-  "description": "PULSE BD, nine TRX voices and eight fixed-point EFM percussion voices rendered without samples through the Digitakt track effects path.",
+  "description": "Nine TRX voices and eight fixed-point EFM percussion voices rendered without samples through the Digitakt track effects path.",
   "device": "digitakt-mk1",
   "os": "1.53",
-  "sources": ["glue.s", "digitakt.c", "percussion.c", "machines/trx_md.c", "machines/trx_family.c", "machines/efm.c", "dsp/osc.c", "dsp/tables.c", "dsp/envelope.c"],
+  "sources": ["glue.s", "digitakt.c", "machines/trx_md.c", "machines/trx_family.c", "machines/efm.c", "dsp/osc.c", "dsp/tables.c", "dsp/envelope.c"],
   "sites": [
     {
       "addr": "0x400657cc",
@@ -29,12 +29,6 @@
       "target": "dp_lab_long"
     },
     {
-      "addr": "0x4000f324",
-      "stock": "4fefffec48d70c1c",
-      "op": "jmp",
-      "target": "dp_val_text"
-    },
-    {
       "addr": "0x4000f2bc",
       "stock": "4fefffec48d7007c",
       "op": "jmp",
@@ -45,12 +39,6 @@
       "stock": "222f00040c81000000a4",
       "op": "jmp",
       "target": "dp_ui_rec"
-    },
-    {
-      "addr": "0x400657ee",
-      "stock": "222f00040c81000000a4",
-      "op": "jmp",
-      "target": "dp_pop_text"
     },
     {
       "addr": "0x4000ff20",
@@ -96,12 +84,6 @@
     }
   ],
   "contribute": [
-    {
-      "to": "core_machines",
-      "order": 60,
-      "data": "00000000",
-      "relocs": [[0, "abs32", "sym:dp_machine", 0]]
-    },
     {
       "to": "core_machines",
       "order": 61,
@@ -180,6 +162,6 @@
   "requires": ["core"],
   "conflicts": ["digineighbor", "digiperc", "digisophie"],
   "resources": {
-    "names": ["machine:8", "machine:9", "machine:10", "machine:11", "machine:12", "machine:13", "machine:14", "machine:15", "machine:16", "machine:17", "machine:18", "machine:19", "machine:20", "machine:21", "machine:22", "machine:23", "machine:24", "machine:25"]
+    "names": ["machine:9", "machine:10", "machine:11", "machine:12", "machine:13", "machine:14", "machine:15", "machine:16", "machine:17", "machine:18", "machine:19", "machine:20", "machine:21", "machine:22", "machine:23", "machine:24", "machine:25"]
   }
 }

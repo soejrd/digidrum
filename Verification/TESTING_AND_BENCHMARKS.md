@@ -2,7 +2,7 @@
 
 ## 1. Current known status
 
-The existing spike has already demonstrated in Digiemu:
+An earlier PULSE BD spike demonstrated in Digiemu:
 
 - audible synthesized PULSE BD output;
 - live editing of the previously problematic SRC D slot;

@@ -1,6 +1,6 @@
 # OS 1.53 sample-free machine spike
 
-Status: **PULSE BD audio, SRC D editing, a D lock, and two-track simultaneous
+Status: **Archived prototype; PULSE BD was removed from the current build.** The original spike demonstrated PULSE BD audio, SRC D editing, a D lock, and two-track simultaneous
 trigs verified in Digiemu; disk project reload and hardware performance remain
 open** (2026-10-05). This is a
 focused experiment on the original Digitakt. Do not flash this build on the
