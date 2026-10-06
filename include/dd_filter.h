@@ -29,6 +29,23 @@ static inline int32_t dd_onepole_hp(dd_onepole *f, int32_t input, int32_t coeff)
     return f->hp;
 }
 
+/* One multiply per stage for bounded Q15 input and state. Use when a small
+ * rounding difference from dd_onepole_lp/hp is acceptable. */
+static inline int32_t dd_onepole_lp_fast(dd_onepole *f, int32_t input,
+                                          int32_t coeff)
+{
+    f->lp += dd_mul_q15(input - f->lp, DD_Q15_ONE - coeff);
+    return f->lp;
+}
+
+static inline int32_t dd_onepole_hp_fast(dd_onepole *f, int32_t input,
+                                          int32_t coeff)
+{
+    f->lp += dd_mul_q15(input - f->lp, DD_Q15_ONE - coeff);
+    f->hp = input - f->lp;
+    return f->hp;
+}
+
 int32_t dd_onepole_lp_run(dd_onepole *f, int32_t input, int32_t coeff);
 
 #endif

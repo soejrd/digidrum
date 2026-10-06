@@ -3,15 +3,23 @@
 const machines = {
     0: {name: 'TRX-BD', labels: ['PTCH', 'DEC', 'RAMP', 'RDEC', 'STRT', 'NOIS', 'HARM', 'CLIP']},
     1: {name: 'TRX-B2', labels: ['PTCH', 'DEC', 'RAMP', 'HOLD', 'TICK', 'NOIS', 'DIRT', 'DIST']},
-    2: {name: 'TRX-SD', labels: ['PTCH', 'DEC', 'BUMP', 'BENV', 'SNAP', 'TONE', 'TUNE', 'CLIP']}
+    2: {name: 'TRX-SD', labels: ['PTCH', 'DEC', 'BUMP', 'BENV', 'SNAP', 'TONE', 'TUNE', 'CLIP']},
+    3: {name: 'TRX-CH', labels: ['GAP', 'DEC', 'HPF', 'LPF', 'MTAL']},
+    4: {name: 'TRX-OH', labels: ['GAP', 'DEC', 'HPF', 'LPF', 'MTAL']},
+    5: {name: 'TRX-CY', labels: ['RICH', 'DEC', 'TOP', 'TTUN', 'SIZE', 'PEAK']},
+    6: {name: 'TRX-RS', labels: ['PTCH', 'DEC', 'DIST']},
+    7: {name: 'TRX-CB', labels: ['PTCH', 'DEC', 'ENH', 'TONE', 'BUMP', '—', '—', 'DIST']},
+    8: {name: 'TRX-CL', labels: ['PTCH', 'DEC', 'DUAL', 'ENH', 'TUNE', 'CLIC']}
 };
 
 class MachineAudio {
-    constructor(onStep, onStatus) {
+    constructor(onStep, onStatus, onDefaults) {
         this.onStep = onStep;
         this.onStatus = onStatus;
+        this.onDefaults = onDefaults;
         this.kind = 1;
-        this.controls = [64, 64, 64, 0, 64, 0, 0, 0];
+        this.controls = Array(8).fill(0);
+        this.defaults = null;
         this.level = 127;
         this.steps = Array(16).fill(false);
         this.tempo = 120;
@@ -34,7 +42,6 @@ class MachineAudio {
         if (!this.context || this.context.state === 'closed') {
             this.context = new AudioContext({sampleRate: 48000});
         }
-        await this.context.resume();
         if (this.context.sampleRate !== 48000) {
             throw new Error(`The C voice requires 48 kHz; this browser opened ${this.context.sampleRate} Hz.`);
         }
@@ -51,15 +58,14 @@ class MachineAudio {
         const wasmReady = new Promise((resolve, reject) => {
             this.node.port.onmessage = event => {
                 const message = event.data;
-                if (message.type === 'ready') resolve();
+                if (message.type === 'ready') resolve(message.defaults);
                 else if (message.type === 'error') reject(new Error(message.message));
                 else if (message.type === 'step') this.onStep(message.index);
             };
         });
         this.node.port.postMessage({type: 'wasm', bytes}, [bytes]);
-        await wasmReady;
-        this.send({type: 'kind', kind: this.kind});
-        this.controls.forEach((value, index) => this.send({type: 'control', index, value}));
+        this.defaults = await wasmReady;
+        this.onDefaults();
         this.send({type: 'level', value: this.level});
         this.send({type: 'tempo', value: this.tempo});
         this.steps.forEach((active, index) => this.send({type: 'step-active', index, active}));
@@ -72,7 +78,9 @@ class MachineAudio {
 
     setKind(kind) {
         this.kind = kind;
+        this.controls = this.defaults ? [...this.defaults[kind].controls] : Array(8).fill(0);
         this.send({type: 'kind', kind});
+        this.controls.forEach((value, index) => this.send({type: 'control', index, value}));
     }
 
     setControl(index, value) {
@@ -97,6 +105,7 @@ class MachineAudio {
 
     async trigger() {
         await this.ensureReady();
+        await this.context.resume();
         this.send({type: 'trigger'});
     }
 
@@ -125,7 +134,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }, (message, error = false) => {
         status.textContent = message;
         status.classList.toggle('error', error);
-    });
+    }, () => machineSelect.dispatchEvent(new Event('change')));
 
     function showKnob(wrapper, value) {
         wrapper.dataset.value = String(value);
@@ -135,7 +144,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     wrappers.forEach((wrapper, index) => {
-        const value = Number(wrapper.dataset.value);
+        const value = audio.controls[index];
         wrapper.dataset.letter = String.fromCharCode(65 + index);
         const readout = document.createElement('span');
         readout.className = 'param-value';
@@ -145,7 +154,6 @@ document.addEventListener('DOMContentLoaded', () => {
         wrapper.setAttribute('aria-valuemin', '0');
         wrapper.setAttribute('aria-valuemax', '127');
         showKnob(wrapper, value);
-        audio.setControl(index, value);
 
         const knob = wrapper.querySelector('.knob-container');
         knob.addEventListener('pointerdown', event => {
@@ -179,11 +187,16 @@ document.addEventListener('DOMContentLoaded', () => {
         audio.setKind(kind);
         wrappers.forEach((wrapper, index) => {
             const name = machines[kind].labels[index];
-            wrapper.querySelector('.param-name').textContent = name;
-            wrapper.setAttribute('aria-label', name);
+            wrapper.hidden = !name;
+            if (name) {
+                wrapper.querySelector('.param-name').textContent = name;
+                wrapper.setAttribute('aria-label', name);
+                showKnob(wrapper, audio.controls[index]);
+            }
         });
     });
     machineSelect.dispatchEvent(new Event('change'));
+    audio.ensureReady().catch(() => {}); // Load C defaults while audio remains suspended.
 
     level.addEventListener('input', () => {
         const value = Number(level.value);

@@ -22,6 +22,13 @@ typedef enum {
     DD_TRX_SD
 } dd_trx_kind;
 
+/* Web kind order: BD, B2, SD, CH, OH, CY, RS, CB, CL.
+ * These 0..127 values are the sole source of fresh-machine defaults for
+ * firmware and browser. The firmware range hook converts them to 8.8. */
+#define DD_TRX_MACHINE_COUNT 9u
+extern const uint8_t dd_trx_defaults_u7[DD_TRX_MACHINE_COUNT][8];
+extern const uint8_t dd_trx_control_counts[DD_TRX_MACHINE_COUNT];
+
 /* Control order follows the Machinedrum manual.
  * BD: PTCH DEC RAMP RDEC STRT NOIS HARM CLIP
  * B2: PTCH DEC RAMP HOLD TICK NOIS DIRT DIST

@@ -1,11 +1,11 @@
 #!/bin/zsh
-# Double-click this file in Finder to open Digidrum TRX5 with digihealth.
+# Double-click this file in Finder to open Digidrum TRX with digihealth.
 set -u
 
 here="${0:A:h}"
 emu="$here/../digiemu"
 python="$emu/.venv/bin/python"
-firmware="$here/out/Digitakt_OS1.53_DIGIDRUM_TRX5_HEALTH.syx"
+firmware="$here/out/Digitakt_OS1.53_DIGIDRUM_TRX_OPT_HEALTH.syx"
 data="$here/out/trx-emulator"
 
 if [[ ! -x "$python" || ! -f "$firmware" ]]; then

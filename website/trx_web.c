@@ -1,21 +1,26 @@
 /* SPDX-License-Identifier: MIT
- * Thin browser bridge. The synthesis stays in machines/trx_md.c.
+ * Thin browser bridge. Synthesis stays in the shared C machine sources.
  */
 #include <stdint.h>
 #include "dd_trx_md.h"
+#include "dd_trx_family.h"
 
 #define WEB_BLOCK 128u
 
 static dd_trx_voice voice;
+static dd_trx_family_voice family_voice;
 static dd_trx_params params;
 static int32_t output[WEB_BLOCK];
 static int pending_trigger;
+static int current_kind;
 
 void dd_web_init(int kind)
 {
     uint32_t i;
-    if (kind < DD_TRX_BD || kind > DD_TRX_SD) kind = DD_TRX_B2;
-    dd_trx_init(&voice, (dd_trx_kind)kind);
+    if (kind < DD_TRXF_BD || kind > DD_TRXF_CL) kind = DD_TRX_B2;
+    current_kind = kind;
+    if (kind == DD_TRX_B2) dd_trx_init(&voice, DD_TRX_B2);
+    else dd_trx_family_init(&family_voice, (dd_trx_family_kind)kind);
     for (i = 0; i < 8u; ++i) params.control[i] = 0;
     params.level = 32767;
     pending_trigger = 0;
@@ -43,7 +48,10 @@ uint32_t dd_web_render(uint32_t frames)
 {
     if (frames > WEB_BLOCK) frames = WEB_BLOCK;
     if (frames) {
-        dd_trx_render(&voice, &params, pending_trigger, output, frames);
+        if (current_kind == DD_TRX_B2)
+            dd_trx_render(&voice, &params, pending_trigger, output, frames);
+        else
+            dd_trx_family_render(&family_voice, &params, pending_trigger, output, frames);
         pending_trigger = 0;
     }
     return (uint32_t)(uintptr_t)output;
@@ -52,4 +60,20 @@ uint32_t dd_web_render(uint32_t frames)
 uint32_t dd_web_capacity(void)
 {
     return WEB_BLOCK;
+}
+
+uint32_t dd_web_machine_count(void)
+{
+    return DD_TRX_MACHINE_COUNT;
+}
+
+uint32_t dd_web_control_count(uint32_t kind)
+{
+    return kind < DD_TRX_MACHINE_COUNT ? dd_trx_control_counts[kind] : 0u;
+}
+
+uint32_t dd_web_default_control(uint32_t kind, uint32_t index)
+{
+    return kind < DD_TRX_MACHINE_COUNT && index < 8u
+        ? dd_trx_defaults_u7[kind][index] : 0u;
 }

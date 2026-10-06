@@ -24,12 +24,26 @@ dp_inject_s:
 dp_machine:
         .long   8, dp_name, dp_short, dp_icon_bmp, 3, 8
         .globl  dp_machine_bd, dp_machine_b2, dp_machine_sd
+        .globl  dp_machine_ch, dp_machine_oh, dp_machine_cy
+        .globl  dp_machine_rs, dp_machine_cb, dp_machine_cl
 dp_machine_bd:
         .long   9, dp_name_bd, dp_short_bd, dp_icon_bmp, 3, 9
 dp_machine_b2:
         .long   10, dp_name_b2, dp_short_b2, dp_icon_bmp, 3, 10
 dp_machine_sd:
         .long   11, dp_name_sd, dp_short_sd, dp_icon_bmp, 3, 11
+dp_machine_ch:
+        .long   12, dp_name_ch, dp_short_ch, dp_icon_bmp, 3, 12
+dp_machine_oh:
+        .long   13, dp_name_oh, dp_short_oh, dp_icon_bmp, 3, 13
+dp_machine_cy:
+        .long   14, dp_name_cy, dp_short_cy, dp_icon_bmp, 3, 14
+dp_machine_rs:
+        .long   15, dp_name_rs, dp_short_rs, dp_icon_bmp, 3, 15
+dp_machine_cb:
+        .long   16, dp_name_cb, dp_short_cb, dp_icon_bmp, 3, 16
+dp_machine_cl:
+        .long   17, dp_name_cl, dp_short_cl, dp_icon_bmp, 3, 17
 
 dp_name:
         .asciz  "PULSE BD"
@@ -41,6 +55,18 @@ dp_name_b2:   .asciz "TRX-B2"
 dp_short_b2:  .asciz "TB2"
 dp_name_sd:   .asciz "TRX-SD"
 dp_short_sd:  .asciz "TSD"
+dp_name_ch:   .asciz "TRX-CH"
+dp_short_ch:  .asciz "TCH"
+dp_name_oh:   .asciz "TRX-OH"
+dp_short_oh:  .asciz "TOH"
+dp_name_cy:   .asciz "TRX-CY"
+dp_short_cy:  .asciz "TCY"
+dp_name_rs:   .asciz "TRX-RS"
+dp_short_rs:  .asciz "TRS"
+dp_name_cb:   .asciz "TRX-CB"
+dp_short_cb:  .asciz "TCB"
+dp_name_cl:   .asciz "TRX-CL"
+dp_short_cl:  .asciz "TCL"
 
 | 11 x 7 stylised drum/body icon.
         .balign 4
@@ -60,7 +86,7 @@ dp_icon_mask:
 | locks keep working through Core 2.1.  Their presentation is wholly PULSE
 | BD's: eight useful controls, ordinary round dials, and custom names.
         .equ    DP_ID,       8
-        .equ    DP_LAST,     11
+        .equ    DP_LAST,     17
 
 | Encoder D reaches the sample browser from the SRC encoder dispatcher,
 | before the SRC page setter. At 0x4003b5b2, d2 is the selected parameter
@@ -147,7 +173,7 @@ dp_lab_long:
 dp_lab_pick:
         move.l  dp_page_m, %d1
         subi.l  #DP_ID, %d1
-        cmpi.l  #3, %d1
+        cmpi.l  #9, %d1
         bhi.s   8f
         mulu.w  #32, %d1               | 8 pointers per machine
         adda.l  %d1, %a0
@@ -169,7 +195,7 @@ dp_is_control:
         bhi.s   8f
         move.l  dp_page_m, %d1
         subi.l  #DP_ID, %d1
-        cmpi.l  #3, %d1
+        cmpi.l  #9, %d1
         bhi.s   8f
         moveq   #1, %d1
         rts
@@ -272,17 +298,17 @@ dp_prange_f:
         movea.l (%sp)+, %a0
         movea.l (%sp)+, %a1
         move.l  4(%sp), %d1
-        cmpi.l  #P_PLAY, %d1
-        bcs.s   9f
+        cmpi.l  #P_TUNE, %d1
+        bcs.w   9f
         cmpi.l  #P_LEV, %d1
-        bhi.s   9f
+        bhi.w   9f
         move.l  (%a1), %d0
         cmpi.l  #0x4017eb58, %d0
-        bne.s   9f
+        bne.w   9f
         movea.l 16(%a1), %a1
         move.l  (%a1), %d0
         cmpi.l  #0x40181330, %d0
-        bne.s   9f
+        bne.w   9f
         movea.l 16(%a1), %a1
         moveq   #0, %d0
         move.b  126(%a1), %d0
@@ -290,6 +316,10 @@ dp_prange_f:
         blt.s   9f
         cmpi.l  #DP_LAST, %d0
         bgt.s   9f
+        cmpi.l  #DP_ID, %d0
+        bne.s   8f
+        cmpi.l  #P_PLAY, %d1
+        bcs.s   9f
         subi.l  #DP_ID, %d0
         mulu.w  #56, %d0               | 7 range pairs per machine
         subi.l  #P_PLAY, %d1
@@ -300,6 +330,19 @@ dp_prange_f:
         move.l  0(%a1,%d1.l), %d0
         move.l  %d0, 4(%a0)
         move.l  4(%a1,%d1.l), %d0
+        move.l  %d0, 8(%a0)
+        bra.s   9f
+8:      subi.l  #9, %d0
+        mulu.w  #8, %d0
+        subi.l  #P_TUNE, %d1
+        add.l   %d0, %d1
+        lea     dd_trx_defaults_u7, %a1
+        clr.l   (%a0)
+        move.l  #0x7f00, %d0
+        move.l  %d0, 4(%a0)
+        moveq   #0, %d0
+        move.b  0(%a1,%d1.l), %d0
+        lsl.l   #8, %d0
         move.l  %d0, 8(%a0)
 9:      move.l  %a0, %d0
         rts
@@ -314,6 +357,18 @@ dp_short_tab:
         .long   dp_s_tick, dp_s_nois, dp_s_dirt, dp_s_dist
         .long   dp_s_ptch, dp_s_dec, dp_s_bump, dp_s_benv
         .long   dp_s_snap, dp_s_tone, dp_s_tune, dp_s_clip
+        .long   dp_s_gap, dp_s_dec, dp_s_hpf, dp_s_lpf
+        .long   dp_s_mtal, dp_s_none, dp_s_none, dp_s_none
+        .long   dp_s_gap, dp_s_dec, dp_s_hpf, dp_s_lpf
+        .long   dp_s_mtal, dp_s_none, dp_s_none, dp_s_none
+        .long   dp_s_rich, dp_s_dec, dp_s_top, dp_s_ttun
+        .long   dp_s_size, dp_s_peak, dp_s_none, dp_s_none
+        .long   dp_s_ptch, dp_s_dec, dp_s_dist, dp_s_none
+        .long   dp_s_none, dp_s_none, dp_s_none, dp_s_none
+        .long   dp_s_ptch, dp_s_dec, dp_s_enh, dp_s_tone
+        .long   dp_s_bump, dp_s_none, dp_s_none, dp_s_dist
+        .long   dp_s_ptch, dp_s_dec, dp_s_dual, dp_s_enh
+        .long   dp_s_tune, dp_s_clic, dp_s_none, dp_s_none
 dp_long_tab:
         .long   dp_l_pitch, dp_l_char, dp_l_tone, dp_l_punch
         .long   dp_l_sweep, dp_l_decay, dp_l_drive, dp_l_level
@@ -323,6 +378,18 @@ dp_long_tab:
         .long   dp_l_tick, dp_l_nois, dp_l_dirt, dp_l_dist
         .long   dp_l_ptch, dp_l_dec, dp_l_bump, dp_l_benv
         .long   dp_l_snap, dp_l_tone, dp_l_tune, dp_l_clip
+        .long   dp_l_gap, dp_l_dec, dp_l_hpf, dp_l_lpf
+        .long   dp_l_mtal, dp_l_none, dp_l_none, dp_l_none
+        .long   dp_l_gap, dp_l_dec, dp_l_hpf, dp_l_lpf
+        .long   dp_l_mtal, dp_l_none, dp_l_none, dp_l_none
+        .long   dp_l_rich, dp_l_dec, dp_l_top, dp_l_ttun
+        .long   dp_l_size, dp_l_peak, dp_l_none, dp_l_none
+        .long   dp_l_ptch, dp_l_dec, dp_l_dist, dp_l_none
+        .long   dp_l_none, dp_l_none, dp_l_none, dp_l_none
+        .long   dp_l_ptch, dp_l_dec, dp_l_enh, dp_l_tone
+        .long   dp_l_bump, dp_l_none, dp_l_none, dp_l_dist
+        .long   dp_l_ptch, dp_l_dec, dp_l_dual, dp_l_enh
+        .long   dp_l_tune, dp_l_clic, dp_l_none, dp_l_none
 | {maximum, default}, 8.8 values, for PLAY through LEV.
 dp_range_tab:
         .long   0x0300, 0x0300          | CHARACTER
@@ -332,27 +399,6 @@ dp_range_tab:
         .long   0x7f00, 0x4800          | DECAY
         .long   0x7f00, 0x2000          | DRIVE
         .long   0x7f00, 0x6400          | LEVEL
-        .long   0x7f00, 0x4000          | BD DEC
-        .long   0x7f00, 0x4800          | BD RAMP
-        .long   0x7f00, 0x3000          | BD RDEC
-        .long   0x7f00, 0x2000          | BD STRT
-        .long   0x7f00, 0x1800          | BD NOIS
-        .long   0x7f00, 0x2000          | BD HARM
-        .long   0x7f00, 0x1000          | BD CLIP
-        .long   0x7f00, 0x4800          | B2 DEC
-        .long   0x7f00, 0x4000          | B2 RAMP
-        .long   0x7f00, 0x1800          | B2 HOLD
-        .long   0x7f00, 0x2800          | B2 TICK
-        .long   0x7f00, 0x1800          | B2 NOIS
-        .long   0x7f00, 0x2000          | B2 DIRT
-        .long   0x7f00, 0x1000          | B2 DIST
-        .long   0x7f00, 0x3800          | SD DEC
-        .long   0x7f00, 0x3800          | SD BUMP
-        .long   0x7f00, 0x3000          | SD BENV
-        .long   0x7f00, 0x5000          | SD SNAP
-        .long   0x7f00, 0x4000          | SD TONE
-        .long   0x7f00, 0x4000          | SD TUNE
-        .long   0x7f00, 0x1000          | SD CLIP
 
 dp_s_pitch: .asciz "PITCH"
 dp_s_char:  .asciz "CHAR"
@@ -378,6 +424,19 @@ dp_s_strt:  .asciz "STRT"
 dp_s_nois:  .asciz "NOIS"
 dp_s_harm:  .asciz "HARM"
 dp_s_clip:  .asciz "CLIP"
+dp_s_gap:   .asciz "GAP"
+dp_s_hpf:   .asciz "HPF"
+dp_s_lpf:   .asciz "LPF"
+dp_s_mtal:  .asciz "MTAL"
+dp_s_rich:  .asciz "RICH"
+dp_s_top:   .asciz "TOP"
+dp_s_ttun:  .asciz "TTUN"
+dp_s_size:  .asciz "SIZE"
+dp_s_peak:  .asciz "PEAK"
+dp_s_enh:   .asciz "ENH"
+dp_s_dual:  .asciz "DUAL"
+dp_s_clic:  .asciz "CLIC"
+dp_s_none:  .asciz "-"
 dp_s_hold:  .asciz "HOLD"
 dp_s_tick:  .asciz "TICK"
 dp_s_dirt:  .asciz "DIRT"
@@ -394,6 +453,19 @@ dp_l_strt:  .asciz "Start"
 dp_l_nois:  .asciz "Noise"
 dp_l_harm:  .asciz "Harmonics"
 dp_l_clip:  .asciz "Clip"
+dp_l_gap:   .asciz "Gap"
+dp_l_hpf:   .asciz "Highpass"
+dp_l_lpf:   .asciz "Lowpass"
+dp_l_mtal:  .asciz "Metal"
+dp_l_rich:  .asciz "Richness"
+dp_l_top:   .asciz "Top"
+dp_l_ttun:  .asciz "Top Tune"
+dp_l_size:  .asciz "Size"
+dp_l_peak:  .asciz "Peak"
+dp_l_enh:   .asciz "Enhance"
+dp_l_dual:  .asciz "Dual"
+dp_l_clic:  .asciz "Click"
+dp_l_none:  .asciz "Unused"
 dp_l_hold:  .asciz "Hold"
 dp_l_tick:  .asciz "Tick"
 dp_l_dirt:  .asciz "Dirt"

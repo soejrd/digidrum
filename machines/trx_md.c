@@ -6,6 +6,21 @@
  * The eight machine controls are separate from the track level.
  */
 #include "../include/dd_trx_md.h"
+
+const uint8_t dd_trx_defaults_u7[DD_TRX_MACHINE_COUNT][8] = {
+    {64, 64, 64, 64, 64, 0, 0, 0},     /* BD */
+    {64, 64, 64, 0, 0, 0, 0, 0},       /* B2 */
+    {34, 13, 0, 64, 127, 0, 104, 85}, /* SD: Gearmulator baseline */
+    {2, 10, 0, 127, 0, 0, 0, 0},      /* CH */
+    {2, 10, 0, 127, 0, 0, 0, 0},      /* OH */
+    {127, 32, 94, 105, 127, 2, 0, 0}, /* CY */
+    {64, 64, 0, 0, 0, 0, 0, 0},       /* RS: provisional */
+    {64, 64, 64, 64, 0, 0, 0, 0},     /* CB: provisional */
+    {64, 64, 0, 64, 64, 0, 0, 0}     /* CL: provisional */
+};
+
+const uint8_t dd_trx_control_counts[DD_TRX_MACHINE_COUNT] =
+    {8, 8, 8, 5, 5, 6, 3, 8, 6};
 #include "../include/dd_fixed.h"
 #include "../include/dd_tables.h"
 

@@ -6,7 +6,7 @@ class TrxProcessor extends AudioWorkletProcessor {
         this.samples = null;
         this.capacity = 0;
         this.kind = 1;
-        this.controls = [64, 64, 64, 0, 64, 0, 0, 0];
+        this.controls = Array(8).fill(0);
         this.level = 127;
         this.tempo = 120;
         this.steps = Array(16).fill(false);
@@ -24,12 +24,17 @@ class TrxProcessor extends AudioWorkletProcessor {
                 const loaded = await WebAssembly.instantiate(message.bytes);
                 this.wasm = loaded.instance.exports;
                 this.capacity = this.wasm.dd_web_capacity();
+                const defaults = Array.from({length: this.wasm.dd_web_machine_count()}, (_, kind) => ({
+                    controls: Array.from({length: 8}, (_, index) => this.wasm.dd_web_default_control(kind, index)),
+                    count: this.wasm.dd_web_control_count(kind)
+                }));
+                this.controls = [...defaults[this.kind].controls];
                 this.wasm.dd_web_init(this.kind);
                 this.controls.forEach((value, index) => this.wasm.dd_web_set_control(index, value));
                 this.wasm.dd_web_set_level(this.level);
                 const pointer = this.wasm.dd_web_render(0);
                 this.samples = new Int32Array(this.wasm.memory.buffer, pointer, this.capacity);
-                this.port.postMessage({type: 'ready'});
+                this.port.postMessage({type: 'ready', defaults});
             } else if (message.type === 'kind') {
                 this.kind = message.kind;
                 if (this.wasm) {

@@ -21,8 +21,7 @@ int32_t dd_osc_sine_interp(dd_osc *o, uint32_t inc)
 
 int32_t dd_osc_square(dd_osc *o, uint32_t inc, uint32_t width)
 {
-    o->phase += inc;
-    return (o->phase < width) ? 32767 : -32767;
+    return dd_osc_square_fast(o, inc, width);
 }
 
 int32_t dd_osc_triangle(dd_osc *o, uint32_t inc)

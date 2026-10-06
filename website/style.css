@@ -128,6 +128,8 @@ input[type="range"] {
   user-select: none;
 }
 
+.knob-wrapper[hidden] { display: none; }
+
 .knob-wrapper:hover { background: #20251c; }
 .knob-wrapper:focus-visible { outline: 2px solid var(--amber); outline-offset: -3px; }
 .knob-wrapper::before {

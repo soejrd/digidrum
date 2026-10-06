@@ -1,14 +1,14 @@
 {
   "id": "digidrum-spike",
-  "version": "0.2.0",
+  "version": "0.3.1",
   "license": "GPL-2.0-or-later",
   "title": "Digidrum percussion machines",
   "category": "Synthesis",
   "author": "Digidrum contributors; based on digiperc",
-  "description": "PULSE BD plus three original, fixed-point TRX-inspired percussion voices with eight synth controls each: TRX-BD, TRX-B2 and TRX-SD. Rendered without samples through the Digitakt track effects path.",
+  "description": "PULSE BD plus nine fixed-point TRX percussion voices: BD, B2, SD, CH, OH, CY, RS, CB and CL. Rendered without samples through the Digitakt track effects path.",
   "device": "digitakt-mk1",
   "os": "1.53",
-  "sources": ["glue.s", "digitakt.c", "percussion.c", "machines/trx_md.c", "dsp/osc.c", "dsp/tables.c", "dsp/envelope.c"],
+  "sources": ["glue.s", "digitakt.c", "percussion.c", "machines/trx_md.c", "machines/trx_family.c", "dsp/osc.c", "dsp/tables.c", "dsp/envelope.c"],
   "sites": [
     {
       "addr": "0x400657cc",
@@ -119,11 +119,35 @@
       "order": 63,
       "data": "00000000",
       "relocs": [[0, "abs32", "sym:dp_machine_sd", 0]]
+    },
+    {
+      "to": "core_machines", "order": 64, "data": "00000000",
+      "relocs": [[0, "abs32", "sym:dp_machine_ch", 0]]
+    },
+    {
+      "to": "core_machines", "order": 65, "data": "00000000",
+      "relocs": [[0, "abs32", "sym:dp_machine_oh", 0]]
+    },
+    {
+      "to": "core_machines", "order": 66, "data": "00000000",
+      "relocs": [[0, "abs32", "sym:dp_machine_cy", 0]]
+    },
+    {
+      "to": "core_machines", "order": 67, "data": "00000000",
+      "relocs": [[0, "abs32", "sym:dp_machine_rs", 0]]
+    },
+    {
+      "to": "core_machines", "order": 68, "data": "00000000",
+      "relocs": [[0, "abs32", "sym:dp_machine_cb", 0]]
+    },
+    {
+      "to": "core_machines", "order": 69, "data": "00000000",
+      "relocs": [[0, "abs32", "sym:dp_machine_cl", 0]]
     }
   ],
   "requires": ["core"],
   "conflicts": ["digineighbor", "digiperc", "digisophie"],
   "resources": {
-    "names": ["machine:8", "machine:9", "machine:10", "machine:11"]
+    "names": ["machine:8", "machine:9", "machine:10", "machine:11", "machine:12", "machine:13", "machine:14", "machine:15", "machine:16", "machine:17"]
   }
 }
