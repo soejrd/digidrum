@@ -44,6 +44,10 @@ The firmware registers them as machine IDs 9, 10 and 11. PULSE BD retains ID 8.
 Run `make test cross-check cross-check-dsp` for host and ColdFire checks and
 `make demo` to create `out/trx-b2.wav`, `out/trx-bd.wav` and `out/trx-sd.wav`.
 
+The one-voice [browser test](website/README.md) uses the same C TRX source
+through WebAssembly. Run `make web`, then serve `website/` over localhost to
+try TRX-B2, TRX-BD, or TRX-SD in an AudioWorklet sequencer.
+
 Build the emulator firmware with the local elekloader and owner-supplied
 OS 1.53 file:
 

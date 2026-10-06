@@ -7,7 +7,7 @@ INCFLAGS = -I . -I include -I tools
 
 DSP_SOURCES = dsp/tables.c dsp/osc.c dsp/envelope.c dsp/filter.c
 
-.PHONY: all test demo cross-check cross-check-dsp clean
+.PHONY: all test demo cross-check cross-check-dsp clean web
 
 all: test dsp-test
 
@@ -93,6 +93,19 @@ demo: out/render_demo out/render_benchmark out/render_trx_md
 	./out/render_demo
 	./out/render_benchmark
 	./out/render_trx_md
+
+WEB_EMCC ?= emsdk/upstream/emscripten/emcc
+
+website/trx-synth.wasm: website/trx_web.c machines/trx_md.c include/dd_trx_md.h dsp/osc.c dsp/tables.c dsp/envelope.c
+	EM_CONFIG="$(CURDIR)/emsdk/.emscripten" $(WEB_EMCC) -O2 -std=c99 -I include \
+		-s STANDALONE_WASM=1 -Wl,--no-entry -Wl,--export-memory \
+		-Wl,--export=dd_web_init -Wl,--export=dd_web_set_control \
+		-Wl,--export=dd_web_set_level -Wl,--export=dd_web_trigger \
+		-Wl,--export=dd_web_render -Wl,--export=dd_web_capacity \
+		website/trx_web.c machines/trx_md.c dsp/osc.c dsp/tables.c dsp/envelope.c \
+		-o $@
+
+web: website/trx-synth.wasm
 
 cross-check: | out
 	mkdir -p out/cross

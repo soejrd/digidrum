@@ -3,20 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Machine Test - TRX_MD</title>
+    <title>Digidrum machine test</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container">
-        <h1>Machine Test</h1>
+        <h1>Digidrum machine test</h1>
         <div class="controls">
             <label for="machine-select">Machine:</label>
             <select id="machine-select">
-                <option value="trx_md">TRX_MD</option>
+                <option value="1" selected>TRX-B2</option>
+                <option value="0">TRX-BD</option>
+                <option value="2">TRX-SD</option>
             </select>
+            <button id="trigger-btn" type="button">Trigger</button>
             <button id="play-btn">Play</button>
             <button id="stop-btn">Stop</button>
+            <label for="level">Level</label>
+            <input type="range" id="level" min="0" max="127" value="127">
+            <span id="level-value">127</span>
         </div>
+        <p id="audio-status" role="status">Press Trigger or Play to start audio.</p>
         
         <div class="encoders-grid">
             <!-- 8 encoder knobs in 2 rows 4 columns -->
@@ -72,7 +79,7 @@
                 </div>
                 <label class="param-name">Hold</label>
             </div>
-            <div class="knob-wrapper" data-param="tick" data-value="0">
+            <div class="knob-wrapper" data-param="tick" data-value="64">
                 <div class="knob-container">
                     <div class="ring"></div>
                     <div class="ring-fill"></div>

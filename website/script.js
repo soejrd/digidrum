@@ -1,281 +1,212 @@
-document.addEventListener('DOMContentLoaded', function() {
-    // Initialize all knobs
-    const knobWrappers = document.querySelectorAll('.knob-wrapper');
-    knobWrappers.forEach(wrapper => {
-        const paramName = wrapper.dataset.param;
-        const initialValue = parseInt(wrapper.dataset.value);
-        
-        // Find the knob elements within this wrapper
-        const knobContainer = wrapper.querySelector('.knob-container');
-        const ringFill = knobContainer.querySelector('.ring-fill');
-        const knobIndicatorContainer = knobContainer.querySelector('.knob-indicator-container');
-        
-        // Set initial rotation based on value (0-127 maps to -140 to 140 degrees)
-        // But the user's example starts at 140 degrees for 0? Let me check...
-        // Looking at the JS: knob starts at rotate(140deg) and ring-fill starts at conic-gradient(var(--accent) 140deg...)
-        // So 140 degrees = 0 value, and it can go from -140 to 140 degrees
-        // Let's map 0-127 to -140 to 140 degrees
-        const rotation = mapValueToRotation(initialValue, 0, 127, -140, 140);
-        
-        // Apply initial styles
-        knobIndicatorContainer.style.transform = `rotate(${rotation}deg)`;
-        updateRingFill(ringFill, rotation);
-        
-        // Store initial rotation for pointer events
-        let lastRot = rotation;
-        
-        // Pointer down event
-        knobContainer.addEventListener('pointerdown', (event) => {
-            const startY = event.clientY;
-            
-            const onPointerMove = (moveEvent) => {
-                const delta = startY - moveEvent.clientY;
-                let currentY = lastRot + delta * 1.5; // speed = 1.5 from user's code
-                
-                // Clamp to max rotation
-                const maxRot = 140;
-                if (currentY > maxRot) currentY = maxRot;
-                if (currentY < -maxRot) currentY = -maxRot;
-                
-                // Update knob indicator rotation
-                knobIndicatorContainer.style.transform = `rotate(${currentY}deg)`;
-                
-                // Update ring-fill background
-                updateRingFill(ringFill, currentY);
-                
-                // Update parameter value and audio
-                const value = mapRotationToValue(currentY, -140, 140, 0, 127);
-                wrapper.dataset.value = Math.round(value);
-                
-                // Update audio utils if available
-                if (window.audioUtils && window.audioUtils.setParam) {
-                    window.audioUtils.setParam(paramName, Math.round(value));
-                }
-            };
-            
-            const onPointerUp = () => {
-                document.removeEventListener('pointermove', onPointerMove);
-                document.removeEventListener('pointerup', onPointerUp);
-                lastRot = parseFloat(knobIndicatorContainer.style.transform.replace('rotate(', '').replace('deg)', '')) || lastRot;
-            };
-            
-            document.addEventListener('pointermove', onPointerMove);
-            document.addEventListener('pointerup', onPointerUp);
-        });
-    });
-    
-    // Helper functions
-    function mapValueToRotation(value, inMin, inMax, outMin, outMax) {
-        return (value - inMin) * (outMax - outMin) / (inMax - inMin) + outMin;
-    }
-    
-    function mapRotationToValue(rotation, inMin, inMax, outMin, outMax) {
-        return (rotation - inMin) * (outMax - outMin) / (inMax - inMin) + outMin;
-    }
-    
-    function updateRingFill(ringFill, rotation) {
-        if (rotation > 0) {
-            ringFill.style.background = `conic-gradient(var(--accent) ${rotation}deg, rgba(255,255,255,0.0) 0 360deg, var(--accent) 0deg)`;
-        } else {
-            ringFill.style.background = `conic-gradient(var(--accent) 0deg, rgba(255,255,255,0.0) 0 ${360 + rotation}deg, var(--accent) 0deg)`;
-        }
-    }
-    
-    // Tempo control
-    const tempoInput = document.getElementById('tempo');
-    const tempoValue = document.getElementById('tempo-value');
-    tempoValue.textContent = tempoInput.value;
-    tempoInput.addEventListener('input', function() {
-        tempoValue.textContent = this.value;
-        // Update audio tempo if set up
-        if (window.audioUtils && window.audioUtils.setTempo) {
-            window.audioUtils.setTempo(this.value);
-        }
-    });
-    
-    // Sequencer steps
-    const steps = document.querySelectorAll('.step');
-    const playhead = document.querySelector('.playhead');
-    let currentStep = 0;
-    let isPlaying = false;
-    let intervalId = null;
-    
-    steps.forEach((step, index) => {
-        step.addEventListener('click', function() {
-            this.classList.toggle('active');
-            // If audio utils exist, update the step state
-            if (window.audioUtils && window.audioUtils.setStepActive) {
-                window.audioUtils.setStepActive(index, this.classList.contains('active'));
-            }
-        });
-    });
-    
-    // Play and Stop buttons
-    const playBtn = document.getElementById('play-btn');
-    const stopBtn = document.getElementById('stop-btn');
-    playBtn.addEventListener('click', function() {
-        if (isPlaying) return;
-        isPlaying = true;
-        currentStep = 0;
-        updatePlayhead();
-        // Start the sequencer interval
-        const bpm = parseInt(tempoInput.value);
-        const interval = 60000 / bpm / 4; // sixteenth notes
-        intervalId = setInterval(() => {
-            currentStep = (currentStep + 1) % 16;
-            updatePlayhead();
-            // Trigger note for active steps
-            if (window.audioUtils && window.audioUtils.triggerStep) {
-                window.audioUtils.triggerStep(currentStep);
-            }
-        }, interval);
-        // Also start audio context if not resumed
-        if (window.audioUtils && window.audioUtils.start) {
-            window.audioUtils.start();
-        }
-    });
-    stopBtn.addEventListener('click', function() {
-        isPlaying = false;
-        clearInterval(intervalId);
-        intervalId = null;
-        if (window.audioUtils && window.audioUtils.stop) {
-            window.audioUtils.stop();
-        }
-    });
-    
-    function updatePlayhead() {
-        const stepWidth = 22 + 6; // step width + gap
-        const left = currentStep * stepWidth;
-        playhead.style.left = `${left}px`;
-    }
-    
-    // Machine dropdown (placeholder)
-    const machineSelect = document.getElementById('machine-select');
-    machineSelect.addEventListener('change', function() {
-        console.log('Machine selected:', this.value);
-        // Here you could load different parameters for different machines
-        // For now, just log
-    });
-    
-    // Initialize audio utilities
-    window.audioUtils = new AudioUtils();
-});
+// The UI sends controls and transport changes. Audio and step timing live in
+// trx-worklet.js; synthesis lives in the shared C sources compiled to WASM.
+const machines = {
+    0: {name: 'TRX-BD', labels: ['PTCH', 'DEC', 'RAMP', 'RDEC', 'STRT', 'NOIS', 'HARM', 'CLIP']},
+    1: {name: 'TRX-B2', labels: ['PTCH', 'DEC', 'RAMP', 'HOLD', 'TICK', 'NOIS', 'DIRT', 'DIST']},
+    2: {name: 'TRX-SD', labels: ['PTCH', 'DEC', 'BUMP', 'BENV', 'SNAP', 'TONE', 'TUNE', 'CLIP']}
+};
 
-// Simple audio utility class (keeping the existing one)
-class AudioUtils {
-    constructor() {
-        this.audioContext = null;
-        this.oscillators = {};
-        this.gainNodes = {};
-        this.noiseBuffers = {};
-        this.distortion = {};
-        this.params = {
-            pitch: 64,
-            decay: 64,
-            ramp: 64,
-            hold: 0,
-            tick: 0,
-            noise: 0,
-            dirt: 0,
-            dist: 0
-        };
-        this.stepsActive = new Array(16).fill(false);
-        this.tempo = 120; // BPM
-        this.isStarted = false;
+class MachineAudio {
+    constructor(onStep, onStatus) {
+        this.onStep = onStep;
+        this.onStatus = onStatus;
+        this.kind = 1;
+        this.controls = [64, 64, 64, 0, 64, 0, 0, 0];
+        this.level = 127;
+        this.steps = Array(16).fill(false);
+        this.tempo = 120;
+        this.context = null;
+        this.node = null;
+        this.ready = null;
     }
-    
-    start() {
-        if (this.isStarted) return;
-        this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        this.isStarted = true;
-        console.log('Audio context started');
+
+    async ensureReady() {
+        if (!this.ready) this.ready = this.initialize().catch(error => {
+            this.ready = null;
+            this.onStatus(error.message, true);
+            throw error;
+        });
+        return this.ready;
     }
-    
-    stop() {
-        if (!this.isStarted) return;
-        this.audioContext.close();
-        this.isStarted = false;
-        // Clear oscillators
-        for (let key in this.oscillators) {
-            this.oscillators[key].stop();
-            delete this.oscillators[key];
+
+    async initialize() {
+        if (!window.AudioWorkletNode) throw new Error('This browser needs AudioWorklet support.');
+        if (!this.context || this.context.state === 'closed') {
+            this.context = new AudioContext({sampleRate: 48000});
         }
-        this.oscillators = {};
-        this.gainNodes = {};
+        await this.context.resume();
+        if (this.context.sampleRate !== 48000) {
+            throw new Error(`The C voice requires 48 kHz; this browser opened ${this.context.sampleRate} Hz.`);
+        }
+        await this.context.audioWorklet.addModule('trx-worklet.js');
+        const response = await fetch('trx-synth.wasm');
+        if (!response.ok) throw new Error(`Could not load trx-synth.wasm (${response.status}).`);
+        const bytes = await response.arrayBuffer();
+        this.node = new AudioWorkletNode(this.context, 'trx-processor', {
+            numberOfInputs: 0,
+            numberOfOutputs: 1,
+            outputChannelCount: [2]
+        });
+        this.node.connect(this.context.destination);
+        const wasmReady = new Promise((resolve, reject) => {
+            this.node.port.onmessage = event => {
+                const message = event.data;
+                if (message.type === 'ready') resolve();
+                else if (message.type === 'error') reject(new Error(message.message));
+                else if (message.type === 'step') this.onStep(message.index);
+            };
+        });
+        this.node.port.postMessage({type: 'wasm', bytes}, [bytes]);
+        await wasmReady;
+        this.send({type: 'kind', kind: this.kind});
+        this.controls.forEach((value, index) => this.send({type: 'control', index, value}));
+        this.send({type: 'level', value: this.level});
+        this.send({type: 'tempo', value: this.tempo});
+        this.steps.forEach((active, index) => this.send({type: 'step-active', index, active}));
+        this.onStatus('Audio ready: shared C TRX voice at 48 kHz.');
     }
-    
-    setParam(name, value) {
-        this.params[name] = value;
-        // Optional: update any active voices
+
+    send(message) {
+        if (this.node) this.node.port.postMessage(message);
     }
-    
-    setTempo(bpm) {
-        this.tempo = bpm;
+
+    setKind(kind) {
+        this.kind = kind;
+        this.send({type: 'kind', kind});
     }
-    
-    setStepActive(index, active) {
-        this.stepsActive[index] = active;
+
+    setControl(index, value) {
+        this.controls[index] = value;
+        this.send({type: 'control', index, value});
     }
-    
-    triggerStep(stepIndex) {
-        if (!this.isStarted || !this.stepsActive[stepIndex]) return;
-        
-        // Create a simple voice
-        const now = this.audioContext.currentTime;
-        
-        // Oscillator
-        const oscillator = this.audioContext.createOscillator();
-        // Map pitch param to frequency: 0-127 -> C2 (65.41Hz) to C6 (1046.50Hz)
-        const pitchValue = this.params.pitch;
-        const frequency = 65.41 * Math.pow(2, (pitchValue - 0) * (Math.log2(1046.50/65.41) / 127));
-        oscillator.frequency.setValueAtTime(frequency, now);
-        oscillator.type = 'sine'; // we can add other waveforms based on params
-        
-        // Gain node for envelope
-        const gainNode = this.audioContext.createGain();
-        gainNode.gain.setValueAtTime(0, now);
-        
-        // Envelope: attack, decay, sustain, release
-        // We have decay, hold, ramp (maybe sustain), etc.
-        // Let's map:
-        // attack: fixed 0.01s
-        // decay: map decay param 0-127 -> 0.01 to 2s
-        // sustain: map ramp param 0-127 -> 0 to 1 (sustain level)
-        // release: fixed 0.1s
-        const attackTime = 0.01;
-        const decayTime = 0.01 + (this.params.decay / 127) * 1.99; // 0.01 to 2.0
-        const sustainLevel = this.params.ramp / 127; // 0 to 1
-        const releaseTime = 0.1;
-        
-        // Envelope
-        gainNode.gain.linearRampToValueAtTime(1, now + attackTime); // attack
-        gainNode.gain.linearRampToValueAtTime(sustainLevel, now + attackTime + decayTime); // decay to sustain
-        // We'll hold sustain until note ends, but we don't have note length from sequencer.
-        // For simplicity, we'll release after a fixed time (e.g., 0.5s) or based on decay?
-        // Let's release after decay time + sustain time? We'll just release after decay + 0.2s.
-        const totalTime = attackTime + decayTime + 0.2;
-        gainNode.gain.setValueAtTime(sustainLevel, now + totalTime); // hold sustain
-        gainNode.gain.linearRampToValueAtTime(0, now + totalTime + releaseTime); // release
-        
-        // Connect
-        oscillator.connect(gainNode);
-        gainNode.connect(this.audioContext.destination);
-        
-        // Start oscillator
-        oscillator.start(now);
-        oscillator.stop(now + totalTime + releaseTime);
-        
-        // Store for potential cleanup (optional)
-        const voiceId = `${now}-${Math.random()}`;
-        this.oscillators[voiceId] = oscillator;
-        this.gainNodes[voiceId] = gainNode;
-        
-        // Clean up after sound ends
-        setTimeout(() => {
-            if (this.oscillators[voiceId]) {
-                delete this.oscillators[voiceId];
-                delete this.gainNodes[voiceId];
-            }
-        }, (totalTime + releaseTime) * 1000 + 100);
+
+    setLevel(value) {
+        this.level = value;
+        this.send({type: 'level', value});
+    }
+
+    setTempo(value) {
+        this.tempo = value;
+        this.send({type: 'tempo', value});
+    }
+
+    setStep(index, active) {
+        this.steps[index] = active;
+        this.send({type: 'step-active', index, active});
+    }
+
+    async trigger() {
+        await this.ensureReady();
+        this.send({type: 'trigger'});
+    }
+
+    async play() {
+        await this.ensureReady();
+        await this.context.resume();
+        this.send({type: 'play'});
+    }
+
+    stop() {
+        this.send({type: 'stop'});
     }
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+    const status = document.getElementById('audio-status');
+    const steps = [...document.querySelectorAll('.step')];
+    const playhead = document.querySelector('.playhead');
+    const wrappers = [...document.querySelectorAll('.knob-wrapper')];
+    const machineSelect = document.getElementById('machine-select');
+    const level = document.getElementById('level');
+    const tempo = document.getElementById('tempo');
+    const audio = new MachineAudio(index => {
+        steps.forEach((step, i) => step.classList.toggle('current', i === index));
+        playhead.style.left = `${index * 28}px`;
+    }, (message, error = false) => {
+        status.textContent = message;
+        status.classList.toggle('error', error);
+    });
+
+    function showKnob(wrapper, value) {
+        wrapper.dataset.value = String(value);
+        wrapper.querySelector('.param-value').textContent = String(value);
+        wrapper.querySelector('.ring-fill').style.width = `${value * 100 / 127}%`;
+        wrapper.setAttribute('aria-valuenow', String(value));
+    }
+
+    wrappers.forEach((wrapper, index) => {
+        const value = Number(wrapper.dataset.value);
+        wrapper.dataset.letter = String.fromCharCode(65 + index);
+        const readout = document.createElement('span');
+        readout.className = 'param-value';
+        wrapper.append(readout);
+        wrapper.setAttribute('role', 'slider');
+        wrapper.setAttribute('tabindex', '0');
+        wrapper.setAttribute('aria-valuemin', '0');
+        wrapper.setAttribute('aria-valuemax', '127');
+        showKnob(wrapper, value);
+        audio.setControl(index, value);
+
+        const knob = wrapper.querySelector('.knob-container');
+        knob.addEventListener('pointerdown', event => {
+            event.preventDefault();
+            knob.setPointerCapture(event.pointerId);
+            const move = moved => {
+                const bounds = knob.getBoundingClientRect();
+                const position = Math.max(0, Math.min(1, (moved.clientX - bounds.left) / bounds.width));
+                const next = Math.round(position * 127);
+                showKnob(wrapper, next);
+                audio.setControl(index, next);
+            };
+            move(event);
+            knob.addEventListener('pointermove', move);
+            knob.addEventListener('pointerup', () => knob.removeEventListener('pointermove', move), {once: true});
+            knob.addEventListener('pointercancel', () => knob.removeEventListener('pointermove', move), {once: true});
+        });
+        wrapper.addEventListener('keydown', event => {
+            const direction = event.key === 'ArrowUp' || event.key === 'ArrowRight' ? 1 :
+                event.key === 'ArrowDown' || event.key === 'ArrowLeft' ? -1 : 0;
+            if (!direction) return;
+            event.preventDefault();
+            const next = Math.max(0, Math.min(127, Number(wrapper.dataset.value) + direction));
+            showKnob(wrapper, next);
+            audio.setControl(index, next);
+        });
+    });
+
+    machineSelect.addEventListener('change', () => {
+        const kind = Number(machineSelect.value);
+        audio.setKind(kind);
+        wrappers.forEach((wrapper, index) => {
+            const name = machines[kind].labels[index];
+            wrapper.querySelector('.param-name').textContent = name;
+            wrapper.setAttribute('aria-label', name);
+        });
+    });
+    machineSelect.dispatchEvent(new Event('change'));
+
+    level.addEventListener('input', () => {
+        const value = Number(level.value);
+        document.getElementById('level-value').textContent = String(value);
+        audio.setLevel(value);
+    });
+    tempo.addEventListener('input', () => {
+        const value = Number(tempo.value);
+        document.getElementById('tempo-value').textContent = String(value);
+        audio.setTempo(value);
+    });
+    steps.forEach((step, index) => step.addEventListener('click', () => {
+        const active = step.classList.toggle('active');
+        audio.setStep(index, active);
+    }));
+    document.getElementById('trigger-btn').addEventListener('click', () => {
+        audio.trigger().catch(() => {});
+    });
+    document.getElementById('play-btn').addEventListener('click', () => {
+        audio.play().catch(() => {});
+    });
+    document.getElementById('stop-btn').addEventListener('click', () => {
+        audio.stop();
+        steps.forEach(step => step.classList.remove('current'));
+    });
+});
