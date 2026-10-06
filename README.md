@@ -3,6 +3,11 @@
 **Bringing the original Machinedrum's sound machines to new hardware**
 
 The goal is to recreate **every machine from the original Elektron Machinedrum** as a playable sound engine. Starting with the TRX kit, then PI, then working through the rest of the lineup. Each machine is being rebuilt from listening, measurements, published descriptions, and new DSP code. This is a recreation of the instruments and their behavior, not a copy or emulation of the original firmware.
+<br/><br/>
+<audio controls>
+  <source src="website/demos/trx-01.mp3" type="audio/mpeg">
+Your browser does not support the audio element.
+</audio>
 
 This is a fresh era for these boxes. We can now explore new synthesis engines inside a familiar sequencer, with parameter locks, track effects, and hands-on controls. The current TRX voices are an early glimpse of what a complete drum-synthesis instrument could become.
 

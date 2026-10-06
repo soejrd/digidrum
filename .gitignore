@@ -9,3 +9,4 @@ tests/md_reference/machines/*/report/*.json
 **/__pycache__/
 tests/md_reference/scripts/*.RPP
 tests/md_reference/scripts/Media/
+resources/
