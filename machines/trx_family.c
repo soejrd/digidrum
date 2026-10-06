@@ -90,15 +90,6 @@ static void configure(dd_trx_family_voice *v, const dd_trx_params *p, int trigge
     pitch = ctl(v, 0);
     length = ctl(v, 1);
     switch (v->kind) {
-    case DD_TRXF_BD:
-        v->inc[0] = hz_inc(38u + pitch * 2u);
-        v->inc[1] = v->inc[0] * 2u;
-        v->env_step = decay_step(70u + length * 10u);
-        v->aux_step = decay_step(4u + ctl(v, 3) * 3u);
-        v->snap_step = decay_step(2u + ctl(v, 5) / 8u);
-        if (trigger) v->sweep = hz_inc(ctl(v, 2) * 8u);
-        v->sweep_step = hz_inc(ctl(v, 2) * 8u) / (80u + ctl(v, 3) * 28u);
-        break;
     case DD_TRXF_SD:
         /* PTCH moves the filtered noise; the two tonal pitches are separate. */
         v->inc[0] = hz_inc(180u);
@@ -180,7 +171,6 @@ static int32_t hat_half_sample(dd_trx_family_voice *v)
 static int32_t sample(dd_trx_family_voice *v)
 {
     int32_t a = 0, b = 0, n, x, y;
-    uint32_t pitch_inc;
     v->age++;
     if ((v->kind != DD_TRXF_CH && v->kind != DD_TRXF_OH) || v->age > v->gap_at)
         v->env = decay(v->env, v->env_step);
@@ -189,15 +179,6 @@ static int32_t sample(dd_trx_family_voice *v)
     if (v->sweep) v->sweep = decay(v->sweep, v->sweep_step);
     n = dd_noise_q15(&v->noise);
     switch (v->kind) {
-    case DD_TRXF_BD:
-        pitch_inc = v->inc[0] + v->sweep;
-        a = dd_osc_sine(&v->osc[0], pitch_inc);
-        b = dd_osc_sine(&v->osc[1], pitch_inc * 2u);
-        x = mul_env(a, v->env) * 3 / 4;
-        x += mul_env(b, v->env) * (int32_t)ctl(v, 6) / 512;
-        x += mul_env(n, v->snap_env) * (int32_t)ctl(v, 5) / 512;
-        x += mul_env(a, v->aux_env) * (int32_t)ctl(v, 4) / 512;
-        return soft(x, ctl(v, 7));
     case DD_TRXF_SD:
         a = dd_osc_sine(&v->osc[0], v->inc[0] + v->sweep);
         b = dd_osc_sine(&v->osc[1], v->inc[1] + v->sweep);

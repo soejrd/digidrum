@@ -20,14 +20,12 @@ dp_inject_s:
 | render ID leaves an empty stock playback window for the injected voice.
         .equ    BMP_VT, 0x401b73b4
         .balign 4
-        .globl  dp_machine_bd, dp_machine_b2, dp_machine_sd
+        .globl  dp_machine_b2, dp_machine_sd
         .globl  dp_machine_ch, dp_machine_oh, dp_machine_cy
         .globl  dp_machine_rs, dp_machine_cb, dp_machine_cl
         .globl  dp_machine_efm_bd, dp_machine_efm_sd, dp_machine_efm_xt
         .globl  dp_machine_efm_cp, dp_machine_efm_rs, dp_machine_efm_cb
         .globl  dp_machine_efm_hh, dp_machine_efm_cy
-dp_machine_bd:
-        .long   9, dp_name_bd, dp_short_bd, dp_icon_bmp, 3, 9
 dp_machine_b2:
         .long   10, dp_name_b2, dp_short_b2, dp_icon_bmp, 3, 10
 dp_machine_sd:
@@ -61,8 +59,6 @@ dp_machine_efm_hh:
 dp_machine_efm_cy:
         .long   25, dp_name_efm_cy, dp_short_efm_cy, dp_icon_bmp, 3, 25
 
-dp_name_bd:   .asciz "TRX-BD"
-dp_short_bd:  .asciz "TBD"
 dp_name_b2:   .asciz "TRX-B2"
 dp_short_b2:  .asciz "TB2"
 dp_name_sd:   .asciz "TRX-SD"
@@ -112,7 +108,7 @@ dp_icon_mask:
 | ---- Synth machine SRC page -------------------------------------------------
 | The eight values remain in SLICE's storage slots, so sounds and parameter
 | locks keep working through Core 2.1.
-        .equ    DP_ID,       9
+        .equ    DP_ID,       10
         .equ    DP_LAST,     25
 
 | Encoder D reaches the sample browser from the SRC encoder dispatcher,
@@ -199,7 +195,7 @@ dp_lab_long:
 dp_lab_pick:
         move.l  dp_page_m, %d1
         subi.l  #DP_ID, %d1
-        cmpi.l  #16, %d1
+        cmpi.l  #15, %d1
         bhi.s   8f
         mulu.w  #32, %d1               | 8 pointers per machine
         adda.l  %d1, %a0
@@ -221,7 +217,7 @@ dp_is_control:
         bhi.s   8f
         move.l  dp_page_m, %d1
         subi.l  #DP_ID, %d1
-        cmpi.l  #16, %d1
+        cmpi.l  #15, %d1
         bhi.s   8f
         moveq   #1, %d1
         rts
@@ -293,7 +289,7 @@ dp_prange_f:
         bgt.w   9f
         cmpi.l  #18, %d0
         bge.s   7f
-        subi.l  #9, %d0
+        subi.l  #10, %d0
         mulu.w  #8, %d0
         subi.l  #P_TUNE, %d1
         add.l   %d0, %d1
@@ -317,8 +313,6 @@ dp_prange_f:
 
         .balign 4
 dp_short_tab:
-        .long   dp_s_ptch, dp_s_dec, dp_s_ramp, dp_s_rdec
-        .long   dp_s_strt, dp_s_nois, dp_s_harm, dp_s_clip
         .long   dp_s_ptch, dp_s_dec, dp_s_ramp, dp_s_hold
         .long   dp_s_tick, dp_s_nois, dp_s_dirt, dp_s_dist
         .long   dp_s_ptch, dp_s_dec, dp_s_bump, dp_s_benv
@@ -352,8 +346,6 @@ dp_short_tab:
         .long   dp_s_ptch, dp_s_dec, dp_s_fb, dp_s_hpf
         .long   dp_s_mod, dp_s_mfrq, dp_s_mdec, dp_s_none
 dp_long_tab:
-        .long   dp_l_ptch, dp_l_dec, dp_l_ramp, dp_l_rdec
-        .long   dp_l_strt, dp_l_nois, dp_l_harm, dp_l_clip
         .long   dp_l_ptch, dp_l_dec, dp_l_ramp, dp_l_hold
         .long   dp_l_tick, dp_l_nois, dp_l_dirt, dp_l_dist
         .long   dp_l_ptch, dp_l_dec, dp_l_bump, dp_l_benv
@@ -392,9 +384,7 @@ dp_s_ptch:  .asciz "PTCH"
 dp_s_dec:   .asciz "DEC"
 dp_s_ramp:  .asciz "RAMP"
 dp_s_rdec:  .asciz "RDEC"
-dp_s_strt:  .asciz "STRT"
 dp_s_nois:  .asciz "NOIS"
-dp_s_harm:  .asciz "HARM"
 dp_s_clip:  .asciz "CLIP"
 dp_s_gap:   .asciz "GAP"
 dp_s_hpf:   .asciz "HPF"
@@ -436,9 +426,7 @@ dp_l_ptch:  .asciz "Pitch"
 dp_l_dec:   .asciz "Decay"
 dp_l_ramp:  .asciz "Pitch Ramp"
 dp_l_rdec:  .asciz "Ramp Decay"
-dp_l_strt:  .asciz "Start"
 dp_l_nois:  .asciz "Noise"
-dp_l_harm:  .asciz "Harmonics"
 dp_l_clip:  .asciz "Clip"
 dp_l_gap:   .asciz "Gap"
 dp_l_hpf:   .asciz "Highpass"

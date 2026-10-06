@@ -11,7 +11,6 @@ typedef int16_t s16;
 typedef int32_t s32;
 typedef uint32_t u32;
 
-#define TRX_BD_MACHINE 9
 #define TRX_B2_MACHINE 10
 #define TRX_SD_MACHINE 11
 #define TRX_LAST_MACHINE 17
@@ -94,7 +93,7 @@ void dp_pageset(void *view, s32 param, s32 delta, s32 flag, u8 *changed)
 {
     dp_pageset_t stock = (dp_pageset_t)(uintptr_t)0x400309b0u;
     s32 machine = ((dp_machineof_t)(uintptr_t)0x4002b5d4u)(view);
-    if (param == 10 && machine >= TRX_BD_MACHINE && machine <= EFM_LAST_MACHINE) {
+    if (param == 10 && machine >= TRX_B2_MACHINE && machine <= EFM_LAST_MACHINE) {
         void **view_vt = *(void ***)view;
         void *track_ref = *(void **)((u8 *)view + 116);
         s32 track = ((dp_trackof_t)(uintptr_t)0x4001d24eu)(track_ref);
@@ -155,15 +154,15 @@ void dp_inject(void)
         if (machine != last_machine[track]) {
             if (machine == TRX_B2_MACHINE)
                 dd_trx_init(&trx_voices[track], DD_TRX_B2);
-            else if (machine >= TRX_BD_MACHINE && machine <= TRX_LAST_MACHINE)
+            else if (machine >= TRX_B2_MACHINE && machine <= TRX_LAST_MACHINE)
                 dd_trx_family_init(&trx_family_voices[track],
-                                   (dd_trx_family_kind)(machine - TRX_BD_MACHINE));
+                                   (dd_trx_family_kind)(machine - TRX_B2_MACHINE));
             else if (machine >= EFM_FIRST_MACHINE && machine <= EFM_LAST_MACHINE)
                 dd_efm_init(&efm_voices[track],
                             (dd_efm_kind)(machine - EFM_FIRST_MACHINE));
             last_machine[track] = machine;
         }
-        if (machine < TRX_BD_MACHINE || machine > EFM_LAST_MACHINE) {
+        if (machine < TRX_B2_MACHINE || machine > EFM_LAST_MACHINE) {
             continue;
         }
         output = TBUF(track);

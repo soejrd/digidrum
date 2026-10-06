@@ -5,11 +5,11 @@
 #include <stdint.h>
 #include "dd_trx_md.h"
 
-/* Browser kind numbers; 1 is the separately measured TRX-B2. */
+/* Browser kind numbers; 0 is the separately measured TRX-B2. */
 typedef enum {
-    DD_TRXF_BD = 0, DD_TRXF_SD = 2, DD_TRXF_CH = 3,
-    DD_TRXF_OH = 4, DD_TRXF_CY = 5, DD_TRXF_RS = 6,
-    DD_TRXF_CB = 7, DD_TRXF_CL = 8
+    DD_TRXF_SD = 1, DD_TRXF_CH = 2, DD_TRXF_OH = 3,
+    DD_TRXF_CY = 4, DD_TRXF_RS = 5, DD_TRXF_CB = 6,
+    DD_TRXF_CL = 7
 } dd_trx_family_kind;
 
 typedef struct {

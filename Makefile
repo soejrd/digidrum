@@ -139,5 +139,5 @@ cross-check-dsp: | out
 	$(CROSS)size -A out/cross/tables.o out/cross/osc.o out/cross/envelope.o out/cross/filter.o out/cross/benchmark_voice.o out/cross/trx_md.o out/cross/trx_family.o out/cross/efm.o
 
 clean:
-	rm -f out/test_* out/render_benchmark out/render_trx_md out/render_machine out/benchmark-voice.wav out/trx-b2.wav out/trx-bd.wav out/trx-sd.wav
+	rm -f out/test_* out/render_benchmark out/render_trx_md out/render_machine out/benchmark-voice.wav out/trx-b2.wav out/trx-sd.wav
 	rm -rf out/cross

@@ -5,7 +5,7 @@ class TrxProcessor extends AudioWorkletProcessor {
         this.wasm = null;
         this.samples = null;
         this.capacity = 0;
-        this.kind = 1;
+        this.kind = 0;
         this.controls = Array(8).fill(0);
         this.level = 127;
         this.tempo = 120;

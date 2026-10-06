@@ -17,20 +17,18 @@ typedef struct {
 } dd_trx_params;
 
 typedef enum {
-    DD_TRX_BD,
     DD_TRX_B2,
     DD_TRX_SD
 } dd_trx_kind;
 
-/* Web kind order: BD, B2, SD, CH, OH, CY, RS, CB, CL.
+/* Web kind order: B2, SD, CH, OH, CY, RS, CB, CL.
  * These 0..127 values are the sole source of fresh-machine defaults for
  * firmware and browser. The firmware range hook converts them to 8.8. */
-#define DD_TRX_MACHINE_COUNT 9u
+#define DD_TRX_MACHINE_COUNT 8u
 extern const uint8_t dd_trx_defaults_u7[DD_TRX_MACHINE_COUNT][8];
 extern const uint8_t dd_trx_control_counts[DD_TRX_MACHINE_COUNT];
 
 /* Control order follows the Machinedrum manual.
- * BD: PTCH DEC RAMP RDEC STRT NOIS HARM CLIP
  * B2: PTCH DEC RAMP HOLD TICK NOIS DIRT DIST
  * SD: PTCH DEC BUMP BENV SNAP TONE TUNE CLIP */
 typedef struct {
@@ -40,28 +38,19 @@ typedef struct {
     dd_onepole noise_filter;
     dd_decay_env amp;
     dd_decay_env transient;
-    dd_pitch_sweep_env ramp;
     dd_pitch_sweep_env bump;
-    dd_ahd_env held_amp;
     dd_downsampler rate;
     dd_trx_params last_params;
     uint32_t body_inc;
     uint32_t second_inc;
     int32_t decay_coeff;
-    int32_t ramp_depth;
-    int32_t ramp_coeff;
     int32_t bump_depth;
     int32_t bump_coeff;
-    int32_t start_gain;
     int32_t noise_gain;
-    int32_t harmonic_gain;
-    int32_t tick_gain;
     int32_t noise_filter_coeff;
     int32_t body_gain;
-    int32_t bits;
     int32_t distortion;
     int32_t level;
-    int32_t hold_samples;
     int32_t held_sample;
     int32_t b2_prev_sample;
     /* TRX-B2 model, derived from the primed Gearmulator reference capture. */

@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: MIT
- * TRX-B2 is a new black-box model from the primed reference sweep. TRX-BD
- * and TRX-SD retain their earlier provisional models.
+ * TRX-B2 is a new black-box model from the primed reference sweep.
+ * TRX-SD retains its earlier provisional model.
  * The legacy voices use half-rate ZOH; TRX-B2 interpolates its half-rate
  * body to the 48 kHz output to avoid held-sample imaging.
  * The eight machine controls are separate from the track level.
@@ -8,7 +8,6 @@
 #include "../include/dd_trx_md.h"
 
 const uint8_t dd_trx_defaults_u7[DD_TRX_MACHINE_COUNT][8] = {
-    {64, 64, 64, 64, 64, 0, 0, 0},     /* BD */
     {64, 64, 64, 0, 0, 0, 0, 0},       /* B2 */
     {34, 13, 0, 64, 127, 0, 104, 85}, /* SD: Gearmulator baseline */
     {2, 10, 0, 127, 0, 0, 0, 0},      /* CH */
@@ -20,7 +19,7 @@ const uint8_t dd_trx_defaults_u7[DD_TRX_MACHINE_COUNT][8] = {
 };
 
 const uint8_t dd_trx_control_counts[DD_TRX_MACHINE_COUNT] =
-    {8, 8, 8, 5, 5, 6, 3, 8, 6};
+    {8, 8, 5, 5, 6, 3, 8, 6};
 #include "../include/dd_fixed.h"
 #include "../include/dd_tables.h"
 
@@ -267,25 +266,8 @@ static void update_controls(dd_trx_voice *v, const dd_trx_params *p)
     if (changed & (1u << 1)) {
         v->decay_coeff = decay_from_control(p->control[1]);
         dd_decay_env_set_coeff(&v->amp, v->decay_coeff);
-        v->held_amp.decay_coeff = v->decay_coeff;
     }
-    if (v->kind == DD_TRX_BD) {
-        if (changed & (1u << 2))
-            v->ramp_depth = scaled(p->control[2], 22000);
-        if (changed & (1u << 3)) {
-            v->ramp_coeff = 32000 + scaled(p->control[3], 765);
-            v->ramp.decay_coeff = v->ramp_coeff;
-        }
-        if (changed & (1u << 4))
-            v->start_gain = scaled(p->control[4], 24000);
-        if (changed & (1u << 5))
-            v->noise_gain = scaled(p->control[5], 18000);
-        if (changed & (1u << 6))
-            v->harmonic_gain = scaled(p->control[6], 15000);
-        if (changed & (1u << 7))
-            v->distortion = p->control[7];
-        v->noise_filter_coeff = 22000;
-    } else if (v->kind == DD_TRX_B2) {
+    if (v->kind == DD_TRX_B2) {
         if (changed) b2_update(v, p);
     } else {
         if (changed & (1u << 2))
@@ -334,12 +316,7 @@ static void trigger_voice(dd_trx_voice *v)
     dd_decay_env_set_coeff(&v->transient,
                            v->kind == DD_TRX_SD ? 32700 : 30000);
     dd_decay_env_trigger(&v->transient);
-    dd_pitch_sweep_trigger(&v->ramp, 0, v->ramp_depth, v->ramp_coeff);
-    dd_pitch_sweep_trigger(&v->bump, 0,
-                           v->kind == DD_TRX_SD ? v->bump_depth : v->start_gain,
-                           v->kind == DD_TRX_SD ? v->bump_coeff : 32200);
-    dd_ahd_env_trigger(&v->held_amp, 32767, 32767, v->decay_coeff,
-                       (int16_t)v->hold_samples);
+    dd_pitch_sweep_trigger(&v->bump, 0, v->bump_depth, v->bump_coeff);
     dd_downsampler_init(&v->rate);
     v->held_sample = 0;
     v->b2_prev_sample = 0;
@@ -360,17 +337,7 @@ static int32_t render_half(dd_trx_voice *v)
     noise = dd_onepole_hp(&v->noise_filter, noise, v->noise_filter_coeff);
     noise = dd_mul_q15(noise, transient);
 
-    if (v->kind == DD_TRX_BD) {
-        int32_t ramp = dd_pitch_sweep_step(&v->ramp);
-        int32_t start = dd_pitch_sweep_step(&v->bump);
-        inc = v->body_inc + (uint32_t)ramp * 800u + (uint32_t)start * 1200u;
-        body = dd_osc_sine_interp(&v->body, inc);
-        body = dd_mul_q15(body, 24000);
-        body += dd_mul_q15(dd_osc_sine_interp(&v->second, inc * 2u),
-                           v->harmonic_gain);
-        mixed = dd_clamp_q15(body + noise);
-        amp = dd_decay_env_step(&v->amp);
-    } else {
+    {
         int32_t bump = dd_pitch_sweep_step(&v->bump);
         inc = v->body_inc + (uint32_t)bump * 700u;
         body = dd_mul_q15(dd_osc_sine_interp(&v->body, inc), v->body_gain);
@@ -393,27 +360,18 @@ void dd_trx_init(dd_trx_voice *v, dd_trx_kind kind)
     dd_onepole_init(&v->noise_filter);
     dd_decay_env_init(&v->amp);
     dd_decay_env_init(&v->transient);
-    dd_pitch_sweep_init(&v->ramp);
     dd_pitch_sweep_init(&v->bump);
-    dd_ahd_env_init(&v->held_amp);
     dd_downsampler_init(&v->rate);
     v->body_inc = 0;
     v->second_inc = 0;
     v->decay_coeff = 0;
-    v->ramp_depth = 0;
-    v->ramp_coeff = 0;
     v->bump_depth = 0;
     v->bump_coeff = 0;
-    v->start_gain = 0;
     v->noise_gain = 0;
-    v->harmonic_gain = 0;
-    v->tick_gain = 0;
     v->noise_filter_coeff = 0;
     v->body_gain = 0;
-    v->bits = 12;
     v->distortion = 0;
     v->level = 0;
-    v->hold_samples = 0;
     v->held_sample = 0;
     v->b2_base_inc = 0;
     v->b2_sweep_hz_q8 = 0;

@@ -42,14 +42,14 @@ The shared parameter cache tracks changes once per render block. The benchmark v
 
 ## Phase 1 — TRX-style core family
 
-Portable TRX-BD, TRX-B2 and TRX-SD voices now render at half rate with the
+Portable TRX-B2 and TRX-SD voices now render at half rate with the
 eight machine controls from the Machinedrum manual, plus a separate track level.
 The control names and order follow the [Elektron manual](https://www.elektron.se/wp-content/uploads/2024/09/machinedrum_manual_OS1.63.pdf);
 the DSP algorithms are original behavioral approximations.
 They pass deterministic, bounds, control-response and eight-voice host tests,
 and cross-compile for ColdFire. WAV demos are available via `make demo`.
-They are registered as Digitakt machine IDs 9–11, using all eight SRC slots;
-Machine ID 8 is now unregistered; TRX and EFM retain IDs 9–25. The SDK built,
+They are registered as Digitakt machine IDs 10–11, using all eight SRC slots;
+machine IDs 8–9 are now unregistered, while the remaining TRX and EFM machines retain IDs 10–25. The SDK built,
 linted and patched the combined firmware. Digiemu cold boot is currently blocked by a native Unicorn
 `Illegal instruction` on this host, so UI/audio behavior remains unverified;
 Phase 0A platform correctness remains a separate gate.
@@ -81,7 +81,7 @@ Internal rate: HALF.
 
 Why first: expressive, cheap, iconic behavior, and a good stress test for pitch envelopes + nonlinear digital color.
 
-### TRX-BD-inspired bass drum
+### TRX-BD-inspired bass drum (deferred)
 
 Priority: **P0**
 

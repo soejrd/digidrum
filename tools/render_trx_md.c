@@ -62,7 +62,6 @@ static int render_one(const char *path, dd_trx_kind kind)
 
 int main(void)
 {
-    return render_one("out/trx-bd.wav", DD_TRX_BD) ||
-           render_one("out/trx-b2.wav", DD_TRX_B2) ||
+    return render_one("out/trx-b2.wav", DD_TRX_B2) ||
            render_one("out/trx-sd.wav", DD_TRX_SD);
 }

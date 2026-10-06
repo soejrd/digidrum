@@ -78,10 +78,10 @@ static void test_eight_voices(void)
     int32_t out[DD_BLOCK_SIZE];
     uint32_t i, block, sum = 0;
     for (i = 0; i < 8; ++i)
-        dd_trx_init(&voices[i], (dd_trx_kind)(i % 3));
+        dd_trx_init(&voices[i], (dd_trx_kind)(i % 2));
     for (block = 0; block < 64; ++block) {
         for (i = 0; i < 8; ++i) {
-            dd_trx_params p = defaults((dd_trx_kind)(i % 3));
+            dd_trx_params p = defaults((dd_trx_kind)(i % 2));
             dd_trx_render(&voices[i], &p, block == 0, out, DD_BLOCK_SIZE);
             sum += energy(out, DD_BLOCK_SIZE);
         }
@@ -95,7 +95,7 @@ static void test_extremes(void)
     dd_trx_params p;
     int32_t out[DD_BLOCK_SIZE];
     uint32_t kind, edge, i, block;
-    for (kind = 0; kind < 3; ++kind) {
+    for (kind = 0; kind < 2; ++kind) {
         for (edge = 0; edge < 2; ++edge) {
             for (i = 0; i < 8; ++i)
                 p.control[i] = edge ? 32767 : 0;
@@ -115,11 +115,11 @@ static void test_extremes(void)
 static void test_block_update_and_retrigger(void)
 {
     dd_trx_voice voice;
-    dd_trx_params p = defaults(DD_TRX_BD);
+    dd_trx_params p = defaults(DD_TRX_SD);
     int32_t out[DD_BLOCK_SIZE];
     uint32_t original_inc;
 
-    dd_trx_init(&voice, DD_TRX_BD);
+    dd_trx_init(&voice, DD_TRX_SD);
     dd_trx_render(&voice, &p, 1, out, DD_BLOCK_SIZE);
     original_inc = voice.body_inc;
     p.control[0] = 24000;
@@ -156,15 +156,6 @@ static void test_control_meanings(void)
     dd_trx_render(&a, &p, 0, short_hit, DD_BLOCK_SIZE);
     assert(a.b2_dirt == 127);
 
-    p = defaults(DD_TRX_BD);
-    p.control[3] = 0;
-    dd_trx_init(&a, DD_TRX_BD);
-    dd_trx_render(&a, &p, 1, short_hit, DD_BLOCK_SIZE);
-    p.control[3] = 32767;
-    dd_trx_init(&b, DD_TRX_BD);
-    dd_trx_render(&b, &p, 1, held_hit, DD_BLOCK_SIZE);
-    assert(b.ramp_coeff > a.ramp_coeff);
-
     p = defaults(DD_TRX_SD);
     p.control[6] = 0;
     dd_trx_init(&a, DD_TRX_SD);
@@ -177,7 +168,6 @@ static void test_control_meanings(void)
 
 int main(void)
 {
-    test_kind(DD_TRX_BD);
     test_kind(DD_TRX_B2);
     test_kind(DD_TRX_SD);
     test_eight_voices();

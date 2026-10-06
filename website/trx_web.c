@@ -19,7 +19,7 @@ static int current_kind;
 void dd_web_init(int kind)
 {
     uint32_t i;
-    if (kind < DD_TRXF_BD || kind >= (int)(DD_TRX_MACHINE_COUNT + DD_EFM_MACHINE_COUNT)) kind = DD_TRX_B2;
+    if (kind < DD_TRX_B2 || kind >= (int)(DD_TRX_MACHINE_COUNT + DD_EFM_MACHINE_COUNT)) kind = DD_TRX_B2;
     current_kind = kind;
     if (kind == DD_TRX_B2) dd_trx_init(&voice, DD_TRX_B2);
     else if (kind < (int)DD_TRX_MACHINE_COUNT)

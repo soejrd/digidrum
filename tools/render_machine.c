@@ -50,7 +50,6 @@ int main(int argc, char **argv)
         if (i + 1 >= (uint32_t)argc) goto usage;
         if (!strcmp(argv[i], "--machine")) {
             if (!strcmp(argv[i+1], "trx_b2")) kind = DD_TRX_B2;
-            else if (!strcmp(argv[i+1], "trx_bd")) kind = DD_TRX_BD;
             else if (!strcmp(argv[i+1], "trx_sd")) kind = DD_TRX_SD;
             else goto usage;
         } else if (!strcmp(argv[i], "--params")) {
@@ -81,6 +80,6 @@ int main(int argc, char **argv)
     if (fclose(f)) { perror(output); return 1; }
     return 0;
 usage:
-    fprintf(stderr, "usage: render_machine --machine trx_b2|trx_bd|trx_sd --params v0,...,v7 --frames N --trigger-frame N --output file.wav\n");
+    fprintf(stderr, "usage: render_machine --machine trx_b2|trx_sd --params v0,...,v7 --frames N --trigger-frame N --output file.wav\n");
     return 2;
 }

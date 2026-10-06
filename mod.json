@@ -1,11 +1,11 @@
 {
   "id": "digidrum-spike",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "license": "GPL-2.0-or-later",
   "title": "Digidrum percussion machines",
   "category": "Synthesis",
   "author": "Digidrum contributors; based on digiperc",
-  "description": "Nine TRX voices and eight fixed-point EFM percussion voices rendered without samples through the Digitakt track effects path.",
+  "description": "Eight TRX voices and eight fixed-point EFM percussion voices rendered without samples through the Digitakt track effects path.",
   "device": "digitakt-mk1",
   "os": "1.53",
   "sources": ["glue.s", "digitakt.c", "machines/trx_md.c", "machines/trx_family.c", "machines/efm.c", "dsp/osc.c", "dsp/tables.c", "dsp/envelope.c"],
@@ -86,12 +86,6 @@
   "contribute": [
     {
       "to": "core_machines",
-      "order": 61,
-      "data": "00000000",
-      "relocs": [[0, "abs32", "sym:dp_machine_bd", 0]]
-    },
-    {
-      "to": "core_machines",
       "order": 62,
       "data": "00000000",
       "relocs": [[0, "abs32", "sym:dp_machine_b2", 0]]
@@ -162,6 +156,6 @@
   "requires": ["core"],
   "conflicts": ["digineighbor", "digiperc", "digisophie"],
   "resources": {
-    "names": ["machine:9", "machine:10", "machine:11", "machine:12", "machine:13", "machine:14", "machine:15", "machine:16", "machine:17", "machine:18", "machine:19", "machine:20", "machine:21", "machine:22", "machine:23", "machine:24", "machine:25"]
+    "names": ["machine:10", "machine:11", "machine:12", "machine:13", "machine:14", "machine:15", "machine:16", "machine:17", "machine:18", "machine:19", "machine:20", "machine:21", "machine:22", "machine:23", "machine:24", "machine:25"]
   }
 }

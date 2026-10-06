@@ -1,23 +1,22 @@
 // The UI sends controls and transport changes. Audio and step timing live in
 // trx-worklet.js; synthesis lives in the shared C sources compiled to WASM.
 const machines = {
-    0: {name: 'TRX-BD', labels: ['PTCH', 'DEC', 'RAMP', 'RDEC', 'STRT', 'NOIS', 'HARM', 'CLIP']},
-    1: {name: 'TRX-B2', labels: ['PTCH', 'DEC', 'RAMP', 'HOLD', 'TICK', 'NOIS', 'DIRT', 'DIST']},
-    2: {name: 'TRX-SD', labels: ['PTCH', 'DEC', 'BUMP', 'BENV', 'SNAP', 'TONE', 'TUNE', 'CLIP']},
-    3: {name: 'TRX-CH', labels: ['GAP', 'DEC', 'HPF', 'LPF', 'MTAL']},
-    4: {name: 'TRX-OH', labels: ['GAP', 'DEC', 'HPF', 'LPF', 'MTAL']},
-    5: {name: 'TRX-CY', labels: ['RICH', 'DEC', 'TOP', 'TTUN', 'SIZE', 'PEAK']},
-    6: {name: 'TRX-RS', labels: ['PTCH', 'DEC', 'DIST']},
-    7: {name: 'TRX-CB', labels: ['PTCH', 'DEC', 'ENH', 'TONE', 'BUMP', '—', '—', 'DIST']},
-    8: {name: 'TRX-CL', labels: ['PTCH', 'DEC', 'DUAL', 'ENH', 'TUNE', 'CLIC']},
-    9: {name: 'EFM-BD', labels: ['PTCH', 'DEC', 'RAMP', 'RDEC', 'MOD', 'MFRQ', 'MDEC', 'MFB']},
-    10: {name: 'EFM-SD', labels: ['PTCH', 'DEC', 'NOISE', 'NDEC', 'MOD', 'MFRQ', 'MDEC', 'HPF']},
-    11: {name: 'EFM-XT', labels: ['PTCH', 'DEC', 'RAMP', 'RDEC', 'MOD', 'MFRQ', 'MDEC', 'CLIC']},
-    12: {name: 'EFM-CP', labels: ['PTCH', 'DEC', 'CLPS', 'CDEC', 'MOD', 'MFRQ', 'MDEC', 'HPF']},
-    13: {name: 'EFM-RS', labels: ['PTCH', 'DEC', 'MOD', 'HPF', 'SNAR', 'SPTC', 'SDEC', 'SMOD']},
-    14: {name: 'EFM-CB', labels: ['PTCH', 'DEC', 'SNAP', 'FB', 'MOD', 'MFRQ', 'MDEC']},
-    15: {name: 'EFM-HH', labels: ['PTCH', 'DEC', 'TREM', 'TFRQ', 'MOD', 'MFRQ', 'MDEC', 'FB']},
-    16: {name: 'EFM-CY', labels: ['PTCH', 'DEC', 'FB', 'HPF', 'MOD', 'MFRQ', 'MDEC']}
+    0: {name: 'TRX-B2', labels: ['PTCH', 'DEC', 'RAMP', 'HOLD', 'TICK', 'NOIS', 'DIRT', 'DIST']},
+    1: {name: 'TRX-SD', labels: ['PTCH', 'DEC', 'BUMP', 'BENV', 'SNAP', 'TONE', 'TUNE', 'CLIP']},
+    2: {name: 'TRX-CH', labels: ['GAP', 'DEC', 'HPF', 'LPF', 'MTAL']},
+    3: {name: 'TRX-OH', labels: ['GAP', 'DEC', 'HPF', 'LPF', 'MTAL']},
+    4: {name: 'TRX-CY', labels: ['RICH', 'DEC', 'TOP', 'TTUN', 'SIZE', 'PEAK']},
+    5: {name: 'TRX-RS', labels: ['PTCH', 'DEC', 'DIST']},
+    6: {name: 'TRX-CB', labels: ['PTCH', 'DEC', 'ENH', 'TONE', 'BUMP', '—', '—', 'DIST']},
+    7: {name: 'TRX-CL', labels: ['PTCH', 'DEC', 'DUAL', 'ENH', 'TUNE', 'CLIC']},
+    8: {name: 'EFM-BD', labels: ['PTCH', 'DEC', 'RAMP', 'RDEC', 'MOD', 'MFRQ', 'MDEC', 'MFB']},
+    9: {name: 'EFM-SD', labels: ['PTCH', 'DEC', 'NOISE', 'NDEC', 'MOD', 'MFRQ', 'MDEC', 'HPF']},
+    10: {name: 'EFM-XT', labels: ['PTCH', 'DEC', 'RAMP', 'RDEC', 'MOD', 'MFRQ', 'MDEC', 'CLIC']},
+    11: {name: 'EFM-CP', labels: ['PTCH', 'DEC', 'CLPS', 'CDEC', 'MOD', 'MFRQ', 'MDEC', 'HPF']},
+    12: {name: 'EFM-RS', labels: ['PTCH', 'DEC', 'MOD', 'HPF', 'SNAR', 'SPTC', 'SDEC', 'SMOD']},
+    13: {name: 'EFM-CB', labels: ['PTCH', 'DEC', 'SNAP', 'FB', 'MOD', 'MFRQ', 'MDEC']},
+    14: {name: 'EFM-HH', labels: ['PTCH', 'DEC', 'TREM', 'TFRQ', 'MOD', 'MFRQ', 'MDEC', 'FB']},
+    15: {name: 'EFM-CY', labels: ['PTCH', 'DEC', 'FB', 'HPF', 'MOD', 'MFRQ', 'MDEC']}
 };
 
 class MachineAudio {
@@ -25,7 +24,7 @@ class MachineAudio {
         this.onStep = onStep;
         this.onStatus = onStatus;
         this.onDefaults = onDefaults;
-        this.kind = 1;
+        this.kind = 0;
         this.controls = Array(8).fill(0);
         this.defaults = null;
         this.level = 127;

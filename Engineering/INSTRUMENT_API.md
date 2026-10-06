@@ -45,7 +45,7 @@ struct dd_params {
 };
 ```
 
-The portable TRX-BD/B2/SD prototypes use `dd_trx_params` instead: eight
+The portable TRX-B2/SD prototypes use `dd_trx_params` instead: eight
 machine controls plus a separate track level. The Digitakt adapter now maps
 all eight SRC slots to these controls and leaves level to the stock track AMP
 path. The patched image builds; emulator behavior still needs verification.
