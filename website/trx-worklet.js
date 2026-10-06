@@ -20,7 +20,7 @@ class TrxProcessor extends AudioWorkletProcessor {
     async onMessage(message) {
         try {
             if (message.type === 'wasm') {
-                if (sampleRate !== 48000) throw new Error(`TRX DSP expects 48 kHz; got ${sampleRate} Hz.`);
+                if (sampleRate !== 48000) throw new Error(`Digidrum DSP expects 48 kHz; got ${sampleRate} Hz.`);
                 const loaded = await WebAssembly.instantiate(message.bytes);
                 this.wasm = loaded.instance.exports;
                 this.capacity = this.wasm.dd_web_capacity();

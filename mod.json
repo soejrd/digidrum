@@ -5,10 +5,10 @@
   "title": "Digidrum percussion machines",
   "category": "Synthesis",
   "author": "Digidrum contributors; based on digiperc",
-  "description": "PULSE BD plus nine fixed-point TRX percussion voices: BD, B2, SD, CH, OH, CY, RS, CB and CL. Rendered without samples through the Digitakt track effects path.",
+  "description": "PULSE BD, nine TRX voices and eight fixed-point EFM percussion voices rendered without samples through the Digitakt track effects path.",
   "device": "digitakt-mk1",
   "os": "1.53",
-  "sources": ["glue.s", "digitakt.c", "percussion.c", "machines/trx_md.c", "machines/trx_family.c", "dsp/osc.c", "dsp/tables.c", "dsp/envelope.c"],
+  "sources": ["glue.s", "digitakt.c", "percussion.c", "machines/trx_md.c", "machines/trx_family.c", "machines/efm.c", "dsp/osc.c", "dsp/tables.c", "dsp/envelope.c"],
   "sites": [
     {
       "addr": "0x400657cc",
@@ -143,11 +143,43 @@
     {
       "to": "core_machines", "order": 69, "data": "00000000",
       "relocs": [[0, "abs32", "sym:dp_machine_cl", 0]]
+    },
+    {
+      "to": "core_machines", "order": 70, "data": "00000000",
+      "relocs": [[0, "abs32", "sym:dp_machine_efm_bd", 0]]
+    },
+    {
+      "to": "core_machines", "order": 71, "data": "00000000",
+      "relocs": [[0, "abs32", "sym:dp_machine_efm_sd", 0]]
+    },
+    {
+      "to": "core_machines", "order": 72, "data": "00000000",
+      "relocs": [[0, "abs32", "sym:dp_machine_efm_xt", 0]]
+    },
+    {
+      "to": "core_machines", "order": 73, "data": "00000000",
+      "relocs": [[0, "abs32", "sym:dp_machine_efm_cp", 0]]
+    },
+    {
+      "to": "core_machines", "order": 74, "data": "00000000",
+      "relocs": [[0, "abs32", "sym:dp_machine_efm_rs", 0]]
+    },
+    {
+      "to": "core_machines", "order": 75, "data": "00000000",
+      "relocs": [[0, "abs32", "sym:dp_machine_efm_cb", 0]]
+    },
+    {
+      "to": "core_machines", "order": 76, "data": "00000000",
+      "relocs": [[0, "abs32", "sym:dp_machine_efm_hh", 0]]
+    },
+    {
+      "to": "core_machines", "order": 77, "data": "00000000",
+      "relocs": [[0, "abs32", "sym:dp_machine_efm_cy", 0]]
     }
   ],
   "requires": ["core"],
   "conflicts": ["digineighbor", "digiperc", "digisophie"],
   "resources": {
-    "names": ["machine:8", "machine:9", "machine:10", "machine:11", "machine:12", "machine:13", "machine:14", "machine:15", "machine:16", "machine:17"]
+    "names": ["machine:8", "machine:9", "machine:10", "machine:11", "machine:12", "machine:13", "machine:14", "machine:15", "machine:16", "machine:17", "machine:18", "machine:19", "machine:20", "machine:21", "machine:22", "machine:23", "machine:24", "machine:25"]
   }
 }

@@ -9,7 +9,15 @@ const machines = {
     5: {name: 'TRX-CY', labels: ['RICH', 'DEC', 'TOP', 'TTUN', 'SIZE', 'PEAK']},
     6: {name: 'TRX-RS', labels: ['PTCH', 'DEC', 'DIST']},
     7: {name: 'TRX-CB', labels: ['PTCH', 'DEC', 'ENH', 'TONE', 'BUMP', '—', '—', 'DIST']},
-    8: {name: 'TRX-CL', labels: ['PTCH', 'DEC', 'DUAL', 'ENH', 'TUNE', 'CLIC']}
+    8: {name: 'TRX-CL', labels: ['PTCH', 'DEC', 'DUAL', 'ENH', 'TUNE', 'CLIC']},
+    9: {name: 'EFM-BD', labels: ['PTCH', 'DEC', 'RAMP', 'RDEC', 'MOD', 'MFRQ', 'MDEC', 'MFB']},
+    10: {name: 'EFM-SD', labels: ['PTCH', 'DEC', 'NOISE', 'NDEC', 'MOD', 'MFRQ', 'MDEC', 'HPF']},
+    11: {name: 'EFM-XT', labels: ['PTCH', 'DEC', 'RAMP', 'RDEC', 'MOD', 'MFRQ', 'MDEC', 'CLIC']},
+    12: {name: 'EFM-CP', labels: ['PTCH', 'DEC', 'CLPS', 'CDEC', 'MOD', 'MFRQ', 'MDEC', 'HPF']},
+    13: {name: 'EFM-RS', labels: ['PTCH', 'DEC', 'MOD', 'HPF', 'SNAR', 'SPTC', 'SDEC', 'SMOD']},
+    14: {name: 'EFM-CB', labels: ['PTCH', 'DEC', 'SNAP', 'FB', 'MOD', 'MFRQ', 'MDEC']},
+    15: {name: 'EFM-HH', labels: ['PTCH', 'DEC', 'TREM', 'TFRQ', 'MOD', 'MFRQ', 'MDEC', 'FB']},
+    16: {name: 'EFM-CY', labels: ['PTCH', 'DEC', 'FB', 'HPF', 'MOD', 'MFRQ', 'MDEC']}
 };
 
 class MachineAudio {
@@ -69,7 +77,7 @@ class MachineAudio {
         this.send({type: 'level', value: this.level});
         this.send({type: 'tempo', value: this.tempo});
         this.steps.forEach((active, index) => this.send({type: 'step-active', index, active}));
-        this.onStatus('Audio ready: shared C TRX voice at 48 kHz.');
+        this.onStatus('Audio ready: shared C Digidrum voice at 48 kHz.');
     }
 
     send(message) {

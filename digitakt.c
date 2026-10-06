@@ -3,6 +3,7 @@
 #include "percussion.h"
 #include "include/dd_trx_md.h"
 #include "include/dd_trx_family.h"
+#include "include/dd_efm.h"
 
 typedef uint8_t u8;
 typedef uint16_t u16;
@@ -15,6 +16,9 @@ typedef uint32_t u32;
 #define TRX_B2_MACHINE 10
 #define TRX_SD_MACHINE 11
 #define TRX_LAST_MACHINE 17
+#define EFM_FIRST_MACHINE 18
+#define EFM_LAST_MACHINE 25
+#define DP_TIMER_COUNT (*(volatile const u32 *)(uintptr_t)0xfc07000cu)
 #define TRACKS 8
 #define TBUF(t) ((s32 *)(uintptr_t)(0x80001a18u + 128u * (u32)(t)))
 #define MACH(t) (*(volatile const u8 *)(uintptr_t)(0x800018bcu + (u32)(t)))
@@ -36,7 +40,57 @@ typedef uint32_t u32;
 static struct dp_voice dp_voices[TRACKS];
 static dd_trx_voice trx_voices[TRACKS];
 static dd_trx_family_voice trx_family_voices[TRACKS];
+static dd_efm_voice efm_voices[TRACKS];
 static u8 last_machine[TRACKS];
+
+/* Hardware EFM render probe. digihealth's read-only USB PEEK can read this
+ * 640-byte table at the address exported in the linked .map.json. Each entry
+ * is one machine and one block class: idle, steady, trigger, control change.
+ * Counters are 32-bit bus-timer ticks; samples are grouped in 32-frame blocks.
+ * A rolling 512..1024-block window bounds arithmetic and tracks recent load.
+ */
+struct dp_perf_slot {
+    u32 seen;
+    u32 window_count;
+    u32 window_ticks;
+    u32 min_ticks;
+    u32 max_ticks;
+};
+volatile struct dp_perf_slot dp_efm_perf[DD_EFM_MACHINE_COUNT][4];
+volatile u32 dp_efm_perf_probe_ticks = 0xffffffffu;
+static u32 dp_efm_perf_calibration_left = 128u;
+
+static int dp_efm_controls_changed(const dd_efm_voice *voice,
+                                   const dd_trx_params *params)
+{
+    u32 i;
+    if (!voice->cache.valid) return 1;
+    for (i = 0; i < 7u; ++i)
+        if (voice->cache.raw.p[i] != params->control[i]) return 1;
+    return voice->cache.raw.level != params->control[7];
+}
+
+static void dp_efm_perf_record(u32 kind, u32 mode, u32 ticks)
+{
+    volatile struct dp_perf_slot *slot = &dp_efm_perf[kind][mode];
+    if (ticks > dp_efm_perf_probe_ticks)
+        ticks -= dp_efm_perf_probe_ticks;
+    else
+        ticks = 0;
+    if (slot->window_count >= 1024u) {
+        slot->window_count >>= 1;
+        slot->window_ticks >>= 1;
+        slot->min_ticks = ticks;
+        slot->max_ticks = ticks;
+    }
+    if (slot->window_count == 0u || ticks < slot->min_ticks)
+        slot->min_ticks = ticks;
+    if (ticks > slot->max_ticks)
+        slot->max_ticks = ticks;
+    slot->window_ticks += ticks;
+    ++slot->window_count;
+    if (slot->seen != 0xffffffffu) ++slot->seen;
+}
 
 /* The SRC view treats slot D as the sample parameter. For PULSE BD, pass
  * only that slot through the stock generic setter at 0x40030a28. */
@@ -54,7 +108,7 @@ void dp_pageset(void *view, s32 param, s32 delta, s32 flag, u8 *changed)
 {
     dp_pageset_t stock = (dp_pageset_t)(uintptr_t)0x400309b0u;
     s32 machine = ((dp_machineof_t)(uintptr_t)0x4002b5d4u)(view);
-    if (param == 10 && machine >= DP_MACHINE && machine <= TRX_LAST_MACHINE) {
+    if (param == 10 && machine >= DP_MACHINE && machine <= EFM_LAST_MACHINE) {
         void **view_vt = *(void ***)view;
         void *track_ref = *(void **)((u8 *)view + 116);
         s32 track = ((dp_trackof_t)(uintptr_t)0x4001d24eu)(track_ref);
@@ -151,6 +205,13 @@ void dp_inject(void)
 {
     u32 triggers = TRIG_BITS;
     s32 track;
+    if (dp_efm_perf_calibration_left) {
+        u32 begin = DP_TIMER_COUNT;
+        u32 ticks = DP_TIMER_COUNT - begin;
+        if (ticks && ticks < dp_efm_perf_probe_ticks)
+            dp_efm_perf_probe_ticks = ticks;
+        --dp_efm_perf_calibration_left;
+    }
     for (track = 0; track < TRACKS; ++track) {
         struct dp_params params;
         dd_trx_params trx_params;
@@ -165,9 +226,12 @@ void dp_inject(void)
             else if (machine >= TRX_BD_MACHINE && machine <= TRX_LAST_MACHINE)
                 dd_trx_family_init(&trx_family_voices[track],
                                    (dd_trx_family_kind)(machine - TRX_BD_MACHINE));
+            else if (machine >= EFM_FIRST_MACHINE && machine <= EFM_LAST_MACHINE)
+                dd_efm_init(&efm_voices[track],
+                            (dd_efm_kind)(machine - EFM_FIRST_MACHINE));
             last_machine[track] = machine;
         }
-        if (machine < DP_MACHINE || machine > TRX_LAST_MACHINE) {
+        if (machine < DP_MACHINE || machine > EFM_LAST_MACHINE) {
             continue;
         }
         output = TBUF(track);
@@ -182,10 +246,23 @@ void dp_inject(void)
                 dd_trx_render(&trx_voices[track], &trx_params,
                               (triggers & (1u << track)) != 0,
                               output, DP_BLOCK_SIZE);
-            else
+            else if (machine <= TRX_LAST_MACHINE)
                 dd_trx_family_render(&trx_family_voices[track], &trx_params,
                                      (triggers & (1u << track)) != 0,
                                      output, DP_BLOCK_SIZE);
+            else {
+                dd_efm_voice *voice = &efm_voices[track];
+                u32 kind = (u32)(machine - EFM_FIRST_MACHINE);
+                int hit = (triggers & (1u << track)) != 0;
+                u32 mode = hit ? 2u :
+                    dp_efm_controls_changed(voice, &trx_params) ? 3u :
+                    voice->active ? 1u : 0u;
+                u32 begin = DP_TIMER_COUNT;
+                dd_efm_render(&efm_voices[track], &trx_params,
+                              hit,
+                              output, DP_BLOCK_SIZE);
+                dp_efm_perf_record(kind, mode, DP_TIMER_COUNT - begin);
+            }
         }
     }
 }

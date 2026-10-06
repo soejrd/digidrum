@@ -1,5 +1,5 @@
 | SPDX-License-Identifier: GPL-2.0-or-later
-| PULSE BD and TRX machine pages, Digitakt Mk1 OS 1.53 render hook.
+| PULSE BD, TRX and EFM machine pages, Digitakt Mk1 OS 1.53 render hook.
 
         .section .run, "ax"
 
@@ -26,6 +26,9 @@ dp_machine:
         .globl  dp_machine_bd, dp_machine_b2, dp_machine_sd
         .globl  dp_machine_ch, dp_machine_oh, dp_machine_cy
         .globl  dp_machine_rs, dp_machine_cb, dp_machine_cl
+        .globl  dp_machine_efm_bd, dp_machine_efm_sd, dp_machine_efm_xt
+        .globl  dp_machine_efm_cp, dp_machine_efm_rs, dp_machine_efm_cb
+        .globl  dp_machine_efm_hh, dp_machine_efm_cy
 dp_machine_bd:
         .long   9, dp_name_bd, dp_short_bd, dp_icon_bmp, 3, 9
 dp_machine_b2:
@@ -44,6 +47,22 @@ dp_machine_cb:
         .long   16, dp_name_cb, dp_short_cb, dp_icon_bmp, 3, 16
 dp_machine_cl:
         .long   17, dp_name_cl, dp_short_cl, dp_icon_bmp, 3, 17
+dp_machine_efm_bd:
+        .long   18, dp_name_efm_bd, dp_short_efm_bd, dp_icon_bmp, 3, 18
+dp_machine_efm_sd:
+        .long   19, dp_name_efm_sd, dp_short_efm_sd, dp_icon_bmp, 3, 19
+dp_machine_efm_xt:
+        .long   20, dp_name_efm_xt, dp_short_efm_xt, dp_icon_bmp, 3, 20
+dp_machine_efm_cp:
+        .long   21, dp_name_efm_cp, dp_short_efm_cp, dp_icon_bmp, 3, 21
+dp_machine_efm_rs:
+        .long   22, dp_name_efm_rs, dp_short_efm_rs, dp_icon_bmp, 3, 22
+dp_machine_efm_cb:
+        .long   23, dp_name_efm_cb, dp_short_efm_cb, dp_icon_bmp, 3, 23
+dp_machine_efm_hh:
+        .long   24, dp_name_efm_hh, dp_short_efm_hh, dp_icon_bmp, 3, 24
+dp_machine_efm_cy:
+        .long   25, dp_name_efm_cy, dp_short_efm_cy, dp_icon_bmp, 3, 25
 
 dp_name:
         .asciz  "PULSE BD"
@@ -67,6 +86,22 @@ dp_name_cb:   .asciz "TRX-CB"
 dp_short_cb:  .asciz "TCB"
 dp_name_cl:   .asciz "TRX-CL"
 dp_short_cl:  .asciz "TCL"
+dp_name_efm_bd: .asciz "EFM-BD"
+dp_short_efm_bd: .asciz "EBD"
+dp_name_efm_sd: .asciz "EFM-SD"
+dp_short_efm_sd: .asciz "ESD"
+dp_name_efm_xt: .asciz "EFM-XT"
+dp_short_efm_xt: .asciz "EXT"
+dp_name_efm_cp: .asciz "EFM-CP"
+dp_short_efm_cp: .asciz "ECP"
+dp_name_efm_rs: .asciz "EFM-RS"
+dp_short_efm_rs: .asciz "ERS"
+dp_name_efm_cb: .asciz "EFM-CB"
+dp_short_efm_cb: .asciz "ECB"
+dp_name_efm_hh: .asciz "EFM-HH"
+dp_short_efm_hh: .asciz "EHH"
+dp_name_efm_cy: .asciz "EFM-CY"
+dp_short_efm_cy: .asciz "ECY"
 
 | 11 x 7 stylised drum/body icon.
         .balign 4
@@ -86,7 +121,7 @@ dp_icon_mask:
 | locks keep working through Core 2.1.  Their presentation is wholly PULSE
 | BD's: eight useful controls, ordinary round dials, and custom names.
         .equ    DP_ID,       8
-        .equ    DP_LAST,     17
+        .equ    DP_LAST,     25
 
 | Encoder D reaches the sample browser from the SRC encoder dispatcher,
 | before the SRC page setter. At 0x4003b5b2, d2 is the selected parameter
@@ -173,7 +208,7 @@ dp_lab_long:
 dp_lab_pick:
         move.l  dp_page_m, %d1
         subi.l  #DP_ID, %d1
-        cmpi.l  #9, %d1
+        cmpi.l  #17, %d1
         bhi.s   8f
         mulu.w  #32, %d1               | 8 pointers per machine
         adda.l  %d1, %a0
@@ -195,7 +230,7 @@ dp_is_control:
         bhi.s   8f
         move.l  dp_page_m, %d1
         subi.l  #DP_ID, %d1
-        cmpi.l  #9, %d1
+        cmpi.l  #17, %d1
         bhi.s   8f
         moveq   #1, %d1
         rts
@@ -313,9 +348,9 @@ dp_prange_f:
         moveq   #0, %d0
         move.b  126(%a1), %d0
         cmpi.l  #DP_ID, %d0
-        blt.s   9f
+        blt.w   9f
         cmpi.l  #DP_LAST, %d0
-        bgt.s   9f
+        bgt.w   9f
         cmpi.l  #DP_ID, %d0
         bne.s   8f
         cmpi.l  #P_PLAY, %d1
@@ -332,11 +367,20 @@ dp_prange_f:
         move.l  4(%a1,%d1.l), %d0
         move.l  %d0, 8(%a0)
         bra.s   9f
-8:      subi.l  #9, %d0
+8:      cmpi.l  #18, %d0
+        bge.s   7f
+        subi.l  #9, %d0
         mulu.w  #8, %d0
         subi.l  #P_TUNE, %d1
         add.l   %d0, %d1
         lea     dd_trx_defaults_u7, %a1
+        bra.s   6f
+7:      subi.l  #18, %d0
+        mulu.w  #8, %d0
+        subi.l  #P_TUNE, %d1
+        add.l   %d0, %d1
+        lea     dd_efm_defaults_u7, %a1
+6:
         clr.l   (%a0)
         move.l  #0x7f00, %d0
         move.l  %d0, 4(%a0)
@@ -369,6 +413,22 @@ dp_short_tab:
         .long   dp_s_bump, dp_s_none, dp_s_none, dp_s_dist
         .long   dp_s_ptch, dp_s_dec, dp_s_dual, dp_s_enh
         .long   dp_s_tune, dp_s_clic, dp_s_none, dp_s_none
+        .long   dp_s_ptch, dp_s_dec, dp_s_ramp, dp_s_rdec
+        .long   dp_s_mod, dp_s_mfrq, dp_s_mdec, dp_s_mfb
+        .long   dp_s_ptch, dp_s_dec, dp_s_noise, dp_s_ndec
+        .long   dp_s_mod, dp_s_mfrq, dp_s_mdec, dp_s_hpf
+        .long   dp_s_ptch, dp_s_dec, dp_s_ramp, dp_s_rdec
+        .long   dp_s_mod, dp_s_mfrq, dp_s_mdec, dp_s_clic
+        .long   dp_s_ptch, dp_s_dec, dp_s_clps, dp_s_cdec
+        .long   dp_s_mod, dp_s_mfrq, dp_s_mdec, dp_s_hpf
+        .long   dp_s_ptch, dp_s_dec, dp_s_mod, dp_s_hpf
+        .long   dp_s_snar, dp_s_sptc, dp_s_sdec, dp_s_smod
+        .long   dp_s_ptch, dp_s_dec, dp_s_snap, dp_s_fb
+        .long   dp_s_mod, dp_s_mfrq, dp_s_mdec, dp_s_none
+        .long   dp_s_ptch, dp_s_dec, dp_s_trem, dp_s_tfrq
+        .long   dp_s_mod, dp_s_mfrq, dp_s_mdec, dp_s_fb
+        .long   dp_s_ptch, dp_s_dec, dp_s_fb, dp_s_hpf
+        .long   dp_s_mod, dp_s_mfrq, dp_s_mdec, dp_s_none
 dp_long_tab:
         .long   dp_l_pitch, dp_l_char, dp_l_tone, dp_l_punch
         .long   dp_l_sweep, dp_l_decay, dp_l_drive, dp_l_level
@@ -390,6 +450,22 @@ dp_long_tab:
         .long   dp_l_bump, dp_l_none, dp_l_none, dp_l_dist
         .long   dp_l_ptch, dp_l_dec, dp_l_dual, dp_l_enh
         .long   dp_l_tune, dp_l_clic, dp_l_none, dp_l_none
+        .long   dp_l_ptch, dp_l_dec, dp_l_ramp, dp_l_rdec
+        .long   dp_l_mod, dp_l_mfrq, dp_l_mdec, dp_l_mfb
+        .long   dp_l_ptch, dp_l_dec, dp_l_noise, dp_l_ndec
+        .long   dp_l_mod, dp_l_mfrq, dp_l_mdec, dp_l_hpf
+        .long   dp_l_ptch, dp_l_dec, dp_l_ramp, dp_l_rdec
+        .long   dp_l_mod, dp_l_mfrq, dp_l_mdec, dp_l_clic
+        .long   dp_l_ptch, dp_l_dec, dp_l_clps, dp_l_cdec
+        .long   dp_l_mod, dp_l_mfrq, dp_l_mdec, dp_l_hpf
+        .long   dp_l_ptch, dp_l_dec, dp_l_mod, dp_l_hpf
+        .long   dp_l_snar, dp_l_sptc, dp_l_sdec, dp_l_smod
+        .long   dp_l_ptch, dp_l_dec, dp_l_snap, dp_l_fb
+        .long   dp_l_mod, dp_l_mfrq, dp_l_mdec, dp_l_none
+        .long   dp_l_ptch, dp_l_dec, dp_l_trem, dp_l_tfrq
+        .long   dp_l_mod, dp_l_mfrq, dp_l_mdec, dp_l_fb
+        .long   dp_l_ptch, dp_l_dec, dp_l_fb, dp_l_hpf
+        .long   dp_l_mod, dp_l_mfrq, dp_l_mdec, dp_l_none
 | {maximum, default}, 8.8 values, for PLAY through LEV.
 dp_range_tab:
         .long   0x0300, 0x0300          | CHARACTER
@@ -445,6 +521,21 @@ dp_s_bump:  .asciz "BUMP"
 dp_s_benv:  .asciz "BENV"
 dp_s_snap:  .asciz "SNAP"
 dp_s_tune:  .asciz "TUNE"
+dp_s_mod:   .asciz "MOD"
+dp_s_mfrq:  .asciz "MFRQ"
+dp_s_mdec:  .asciz "MDEC"
+dp_s_mfb:   .asciz "MFB"
+dp_s_noise: .asciz "NOISE"
+dp_s_ndec:  .asciz "NDEC"
+dp_s_clps:  .asciz "CLPS"
+dp_s_cdec:  .asciz "CDEC"
+dp_s_snar:  .asciz "SNAR"
+dp_s_sptc:  .asciz "SPTC"
+dp_s_sdec:  .asciz "SDEC"
+dp_s_smod:  .asciz "SMOD"
+dp_s_fb:    .asciz "FB"
+dp_s_trem:  .asciz "TREM"
+dp_s_tfrq:  .asciz "TFRQ"
 dp_l_ptch:  .asciz "Pitch"
 dp_l_dec:   .asciz "Decay"
 dp_l_ramp:  .asciz "Pitch Ramp"
@@ -474,4 +565,19 @@ dp_l_bump:  .asciz "Bump"
 dp_l_benv:  .asciz "Bump Envelope"
 dp_l_snap:  .asciz "Snap"
 dp_l_tune:  .asciz "Detune"
+dp_l_mod:   .asciz "Modulation"
+dp_l_mfrq:  .asciz "Mod Frequency"
+dp_l_mdec:  .asciz "Mod Decay"
+dp_l_mfb:   .asciz "Mod Feedback"
+dp_l_noise: .asciz "Noise"
+dp_l_ndec:  .asciz "Noise Decay"
+dp_l_clps:  .asciz "Claps"
+dp_l_cdec:  .asciz "Clap Decay"
+dp_l_snar:  .asciz "Snare Mix"
+dp_l_sptc:  .asciz "Snare Pitch"
+dp_l_sdec:  .asciz "Snare Decay"
+dp_l_smod:  .asciz "Snare Mod"
+dp_l_fb:    .asciz "Feedback"
+dp_l_trem:  .asciz "Tremolo"
+dp_l_tfrq:  .asciz "Trem Frequency"
         .balign 2
