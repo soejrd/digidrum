@@ -17,8 +17,6 @@ This is a fresh era for these boxes. We can now explore new synthesis engines in
 
 ## Machine progress
 
-Each row is a Machinedrum sound voice from the [official machine reference](https://www.elektron.se/wp-content/uploads/2024/09/machinedrum_manual_OS1.63.pdf). The five blocks are a visual guide: 🟩🟩🟩🟩🟩 means complete, 🟨⬜⬜⬜⬜ means an init version exists, and ⬜⬜⬜⬜⬜ means work has not started. TRX-B2 is about 90% done. Sample slots and control, input, and MIDI machines are outside this sound-voice list.
-
 | Voice | Progress | Status |
 | --- | --- | --- |
 | TRX-BD | ⬜⬜⬜⬜⬜ | Not started |
