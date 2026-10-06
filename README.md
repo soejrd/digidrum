@@ -13,7 +13,63 @@ The goal is to recreate **every machine from the original Elektron Machinedrum**
 
 [Try the TRX and EFM machines in your browser](https://soejrd.github.io/digidrum/).
 
-This is a fresh era for these boxes. We can now explore new synthesis engines inside a familiar sequencer, with parameter locks, track effects, and hands-on controls. The current TRX and EFM voices are an early glimpse of what a complete drum-synthesis instrument could become.
+This is a fresh era for these boxes. We can now explore new synthesis engines inside a familiar sequencer, with parameter locks, track effects, and hands-on controls.
+
+## Machine progress
+
+Each row is a Machinedrum sound voice from the [official machine reference](https://www.elektron.se/wp-content/uploads/2024/09/machinedrum_manual_OS1.63.pdf). The five blocks are a visual guide: 🟩🟩🟩🟩🟩 means complete, 🟨⬜⬜⬜⬜ means an init version exists, and ⬜⬜⬜⬜⬜ means work has not started. TRX-B2 is about 90% done. Sample slots and control, input, and MIDI machines are outside this sound-voice list.
+
+| Voice | Progress | Status |
+| --- | --- | --- |
+| TRX-BD | ⬜⬜⬜⬜⬜ | Not started |
+| TRX-B2 | 🟩🟩🟩🟩🟨 | ~90% |
+| TRX-SD | 🟨⬜⬜⬜⬜ | Init |
+| TRX-XT | 🟨⬜⬜⬜⬜ | Init |
+| TRX-CP | ⬜⬜⬜⬜⬜ | Not started |
+| TRX-RS | 🟨⬜⬜⬜⬜ | Init |
+| TRX-CB | 🟨⬜⬜⬜⬜ | Init |
+| TRX-CH | 🟨⬜⬜⬜⬜ | Init |
+| TRX-OH | 🟨⬜⬜⬜⬜ | Init |
+| TRX-CY | 🟨⬜⬜⬜⬜ | Init |
+| TRX-MA | 🟨⬜⬜⬜⬜ | Init |
+| TRX-CL | 🟨⬜⬜⬜⬜ | Init |
+| TRX-XC | 🟨⬜⬜⬜⬜ | Init |
+| EFM-BD | 🟨⬜⬜⬜⬜ | Init |
+| EFM-SD | 🟨⬜⬜⬜⬜ | Init |
+| EFM-XT | 🟨⬜⬜⬜⬜ | Init |
+| EFM-CP | 🟨⬜⬜⬜⬜ | Init |
+| EFM-RS | 🟨⬜⬜⬜⬜ | Init |
+| EFM-CB | 🟨⬜⬜⬜⬜ | Init |
+| EFM-HH | 🟨⬜⬜⬜⬜ | Init |
+| EFM-CY | 🟨⬜⬜⬜⬜ | Init |
+| E12-BD | ⬜⬜⬜⬜⬜ | Not started |
+| E12-SD | ⬜⬜⬜⬜⬜ | Not started |
+| E12-HT | ⬜⬜⬜⬜⬜ | Not started |
+| E12-LT | ⬜⬜⬜⬜⬜ | Not started |
+| E12-CP | ⬜⬜⬜⬜⬜ | Not started |
+| E12-RS | ⬜⬜⬜⬜⬜ | Not started |
+| E12-CB | ⬜⬜⬜⬜⬜ | Not started |
+| E12-CH | ⬜⬜⬜⬜⬜ | Not started |
+| E12-OH | ⬜⬜⬜⬜⬜ | Not started |
+| E12-RC | ⬜⬜⬜⬜⬜ | Not started |
+| E12-CC | ⬜⬜⬜⬜⬜ | Not started |
+| E12-BR | ⬜⬜⬜⬜⬜ | Not started |
+| E12-TA | ⬜⬜⬜⬜⬜ | Not started |
+| E12-TR | ⬜⬜⬜⬜⬜ | Not started |
+| E12-SH | ⬜⬜⬜⬜⬜ | Not started |
+| E12-BC | ⬜⬜⬜⬜⬜ | Not started |
+| PI-BD | ⬜⬜⬜⬜⬜ | Not started |
+| PI-SD | ⬜⬜⬜⬜⬜ | Not started |
+| PI-XT | ⬜⬜⬜⬜⬜ | Not started |
+| PI-RS | ⬜⬜⬜⬜⬜ | Not started |
+| PI-ML | ⬜⬜⬜⬜⬜ | Not started |
+| PI-MA | ⬜⬜⬜⬜⬜ | Not started |
+| PI-HH | ⬜⬜⬜⬜⬜ | Not started |
+| PI-RC | ⬜⬜⬜⬜⬜ | Not started |
+| PI-CC | ⬜⬜⬜⬜⬜ | Not started |
+| GND-SN | ⬜⬜⬜⬜⬜ | Not started |
+| GND-NS | ⬜⬜⬜⬜⬜ | Not started |
+| GND-IM | ⬜⬜⬜⬜⬜ | Not started |
 
 ## Super alpha: expect things to break
 
