@@ -11,6 +11,8 @@ The goal is to recreate **every machine from the original Elektron Machinedrum**
 
 [Sneak preview demo file](website/demos/trx-01.mp3)
 
+[Try the TRX and EFM machines in your browser](https://soejrd.github.io/digidrum/).
+
 This is a fresh era for these boxes. We can now explore new synthesis engines inside a familiar sequencer, with parameter locks, track effects, and hands-on controls. The current TRX and EFM voices are an early glimpse of what a complete drum-synthesis instrument could become.
 
 ## Super alpha: expect things to break

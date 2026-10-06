@@ -1,6 +1,8 @@
 # Browser machine test
 
-From the `digidrum` root:
+The hosted test interface is available at <https://soejrd.github.io/digidrum/>. GitHub Pages publishes the committed `website/` files when they change on `main`. Audio starts after clicking **Trigger** or **Play**.
+
+To run it locally instead, from the `digidrum` root:
 
 ```sh
 make web
