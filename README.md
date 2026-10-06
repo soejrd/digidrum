@@ -8,7 +8,6 @@ The goal is to recreate **every machine from the original Elektron Machinedrum**
   <source src="website/demos/trx-01.mp3" type="audio/mpeg">
 </a>
 </audio>
-<br/>
 
 [Sneak preview demo file](website/demos/trx-01.mp3)
 
@@ -16,9 +15,9 @@ This is a fresh era for these boxes. We can now explore new synthesis engines in
 
 ## Super alpha: expect things to break
 
-Digidrum is experimental firmware. **Expect crashes, CPU overload, sound mismatches, missing features, and project or preset behavior that has not been fully verified.** The recent CH/OH prototypes caused fast crashes on a real Digitakt; an optimized build is available, but its hardware stability still needs testing. Keep the stock OS update available and back up anything you care about before trying an alpha image.
+Digidrum is experimental firmware not ready for use. **Expect crashes, CPU overload, sound mismatches, missing features, and project or preset behavior that has not been fully verified.** The recent CH/OH prototypes caused fast crashes on a real Digitakt. Keep the stock OS update available and back up anything you care about before trying an alpha image.
 
-Today, the firmware target is the **original Digitakt Mk1 running OS 1.53**. Digitone support is part of the goal, but there is no Digitone build yet. The current SysEx is not for Digitakt II.
+Today, the firmware target is the **original Digitakt Mk1 running OS 1.53**. Digitone and Syntakt are part of the goal.
 
 ## How it is built
 
