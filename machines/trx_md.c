@@ -1,11 +1,13 @@
 /* SPDX-License-Identifier: MIT
  * TRX-B2 is a new black-box model from the primed reference sweep. TRX-BD
  * and TRX-SD retain their earlier provisional models.
- * Each voice runs at half rate and returns Q1.31 samples with ZOH output.
+ * The legacy voices use half-rate ZOH; TRX-B2 interpolates its half-rate
+ * body to the 48 kHz output to avoid held-sample imaging.
  * The eight machine controls are separate from the track level.
  */
 #include "../include/dd_trx_md.h"
 #include "../include/dd_fixed.h"
+#include "../include/dd_tables.h"
 
 static int32_t scaled(uint16_t value, int32_t span)
 {
@@ -69,6 +71,44 @@ static uint32_t b2_mul_q15_u24(uint32_t value, uint16_t coeff)
     return (value >> 15) * coeff + ((value & 32767u) * coeff >> 15);
 }
 
+static int32_t b2_symmetric_quantize(int32_t sample, int32_t bits)
+{
+    int32_t step = 1 << (16 - bits);
+    int32_t magnitude = dd_abs32(sample);
+    int32_t rounded = ((magnitude + step / 2) / step) * step;
+    return sample < 0 ? -rounded : rounded;
+}
+
+/* Keep the clean B2 body above 16-bit precision through its long decay. */
+static int32_t b2_sine_q31(dd_osc *osc, uint32_t inc)
+{
+    uint32_t phase, index, fraction;
+    int32_t first, next;
+    osc->phase += inc;
+    phase = osc->phase;
+    index = phase >> (32u - DD_SINE_SIZE_LOG2);
+    fraction = (phase & ((1u << (32u - DD_SINE_SIZE_LOG2)) - 1u)) >> 8;
+    first = dd_sine_tab[index & (DD_SINE_SIZE - 1u)];
+    next = dd_sine_tab[(index + 1u) & (DD_SINE_SIZE - 1u)];
+    return first * 65536 + (next - first) * (int32_t)fraction * 2;
+}
+
+static int32_t b2_mul_q15_s31(int32_t value, int32_t coeff)
+{
+    return (value >> 16) * coeff * 2 +
+        (int32_t)(((uint32_t)value & 65535u) * (uint32_t)coeff >> 14);
+}
+
+static int32_t b2_mul_q24_s31(int32_t value, uint32_t coeff)
+{
+    int32_t high = value >> 12;
+    int32_t low = (int32_t)((uint32_t)value & 4095u);
+    int32_t upper = (int32_t)(coeff >> 12);
+    int32_t lower = (int32_t)(coeff & 4095u);
+    return high * upper + ((high * lower) >> 12) +
+        ((low * upper) >> 12);
+}
+
 static void b2_update(dd_trx_voice *v, const dd_trx_params *p)
 {
     uint16_t pitch = b2_control(p->control[0]);
@@ -94,46 +134,8 @@ static int32_t b2_render_half(dd_trx_voice *v)
 {
     int32_t body, mixed;
     uint32_t phase_inc;
+    uint32_t amp, residual, sweep;
     if (v->b2_amp_q24 == 0 && v->b2_short_resid_q24 == 0) return 0;
-    if ((v->b2_age & 15u) == 0u && v->b2_age != 0u)
-        v->b2_sweep_hz_q8 = (v->b2_sweep_hz_q8 * 32252u) >> 15;
-    phase_inc = v->b2_base_inc + v->b2_sweep_hz_q8 * 699u;
-    body = dd_mul_q15(dd_osc_sine_interp(&v->body, phase_inc), 8500);
-    if (v->b2_dirt) {
-        int32_t bits = v->b2_dirt < 25u ? 13 :
-            v->b2_dirt < 51u ? 10 : v->b2_dirt < 76u ? 7 :
-            v->b2_dirt < 102u ? 5 : v->b2_dirt < 127u ? 4 : 3;
-        int32_t gain_milli = v->b2_dirt <= 76u ?
-            1000 + (int32_t)v->b2_dirt * 30 / 76 :
-            v->b2_dirt <= 102u ?
-            1030 - ((int32_t)v->b2_dirt - 76) * 30 / 26 :
-            1000 - ((int32_t)v->b2_dirt - 102) * 45 / 25;
-        body = dd_bit_quantize(body, bits);
-        body = body * gain_milli / 1000;
-    }
-    if (v->b2_dist) {
-        int32_t drive = (int32_t)v->b2_dist;
-        int32_t gain_milli = 1000 + 115 * drive + 2 * drive * drive;
-        int32_t driven = body * gain_milli / 1000;
-        body = dd_hard_clip(driven, 8600 + 2 * drive);
-    }
-    mixed = dd_mul_q15(body, (int32_t)(v->b2_amp_q24 >> 9));
-    if (v->b2_age < 8u && v->b2_tick) {
-        int32_t impulse = v->b2_tick <= 25u ?
-            (int32_t)v->b2_tick * 428 :
-            10700 + ((int32_t)v->b2_tick - 25) * 250;
-        if (impulse > 17200) impulse = 17200;
-        mixed += impulse * (int32_t)(8u - v->b2_age) / 8;
-    }
-    if (v->b2_age < 240u && v->b2_noise) {
-        int32_t noise = dd_noise_q15(&v->noise);
-        mixed += noise * (int32_t)v->b2_noise * (int32_t)(240u-v->b2_age)
-                 / (127 * 240 * 40);
-    }
-    if (v->b2_short_resid_gain)
-        mixed += ((int32_t)(v->b2_short_resid_q24 >> 9) *
-                  v->b2_short_resid_gain) >> 15;
-    ++v->b2_age;
     if ((v->b2_age & 31u) == 0u) {
         uint16_t coeff = 32766; /* Measured slow loss during HOLD (~20 s). */
         if (v->b2_age > v->b2_hold_samples) {
@@ -143,12 +145,87 @@ static int32_t b2_render_half(dd_trx_voice *v)
                     (v->b2_hold_samples ? 288000u : 336000u))
                 coeff = v->b2_late_coeff;
         }
-        v->b2_amp_q24 = b2_mul_q15_u24(v->b2_amp_q24, coeff);
+        v->b2_amp_target_q24 = b2_mul_q15_u24(v->b2_amp_q24, coeff);
         if (v->b2_short_resid_gain)
-            v->b2_short_resid_q24 =
+            v->b2_short_resid_target_q24 =
                 b2_mul_q15_u24(v->b2_short_resid_q24, 31540u);
     }
-    return dd_clamp_q15(dd_mul_q15(dd_clamp(mixed, -17300, 17300), v->level));
+    if ((v->b2_age & 15u) == 0u)
+        v->b2_sweep_target_q8 =
+            (v->b2_sweep_hz_q8 * 32252u) >> 15;
+    sweep = v->b2_sweep_hz_q8 -
+        (v->b2_sweep_hz_q8 - v->b2_sweep_target_q8) *
+        (v->b2_age & 15u) / 16u;
+    amp = v->b2_amp_q24 -
+        (v->b2_amp_q24 - v->b2_amp_target_q24) *
+        (v->b2_age & 31u) / 32u;
+    residual = v->b2_short_resid_q24 -
+        (v->b2_short_resid_q24 - v->b2_short_resid_target_q24) *
+        (v->b2_age & 31u) / 32u;
+    phase_inc = v->b2_base_inc + sweep * 699u;
+    body = b2_mul_q15_s31(b2_sine_q31(&v->body, phase_inc), 8500);
+    if (v->b2_dirt) {
+        int32_t dry = body >> 16, low, high;
+        uint16_t position, width;
+        int32_t gain_milli = v->b2_dirt <= 76u ?
+            1000 + (int32_t)v->b2_dirt * 30 / 76 :
+            v->b2_dirt <= 102u ?
+            1030 - ((int32_t)v->b2_dirt - 76) * 30 / 26 :
+            1000 - ((int32_t)v->b2_dirt - 102) * 45 / 25;
+        if (v->b2_dirt <= 25u) {
+            low = dry;
+            high = b2_symmetric_quantize(dry, 10);
+            position = v->b2_dirt;
+            width = 25;
+        } else if (v->b2_dirt <= 51u) {
+            low = b2_symmetric_quantize(dry, 10);
+            high = b2_symmetric_quantize(dry, 7);
+            position = v->b2_dirt - 25u;
+            width = 26;
+        } else if (v->b2_dirt <= 76u) {
+            low = b2_symmetric_quantize(dry, 7);
+            high = b2_symmetric_quantize(dry, 5);
+            position = v->b2_dirt - 51u;
+            width = 25;
+        } else if (v->b2_dirt <= 102u) {
+            low = b2_symmetric_quantize(dry, 5);
+            high = b2_symmetric_quantize(dry, 4);
+            position = v->b2_dirt - 76u;
+            width = 26;
+        } else {
+            low = b2_symmetric_quantize(dry, 4);
+            high = b2_symmetric_quantize(dry, 3);
+            position = v->b2_dirt - 102u;
+            width = 25;
+        }
+        body = low + (high - low) * position / width;
+        body = body * gain_milli / 1000 * 65536;
+    }
+    if (v->b2_dist) {
+        int32_t drive = (int32_t)v->b2_dist;
+        int32_t gain_milli = 1000 + 115 * drive + 2 * drive * drive;
+        int32_t driven = (body >> 16) * gain_milli / 1000;
+        body = dd_hard_clip(driven, 8600 + 2 * drive) * 65536;
+    }
+    mixed = b2_mul_q24_s31(body, amp);
+    if (v->b2_age < 8u && v->b2_tick) {
+        int32_t impulse = v->b2_tick <= 25u ?
+            (int32_t)v->b2_tick * 428 :
+            10700 + ((int32_t)v->b2_tick - 25) * 250;
+        if (impulse > 17200) impulse = 17200;
+        mixed += (impulse * (int32_t)(8u - v->b2_age) / 8) * 65536;
+    }
+    if (v->b2_short_resid_gain)
+        mixed += b2_mul_q24_s31(v->b2_short_resid_gain * 65536, residual);
+    ++v->b2_age;
+    if ((v->b2_age & 15u) == 0u)
+        v->b2_sweep_hz_q8 = v->b2_sweep_target_q8;
+    if ((v->b2_age & 31u) == 0u) {
+        v->b2_amp_q24 = v->b2_amp_target_q24;
+        v->b2_short_resid_q24 = v->b2_short_resid_target_q24;
+    }
+    return b2_mul_q15_s31(dd_clamp(mixed, -17300 * 65536,
+                                    17300 * 65536), v->level);
 }
 
 static void update_controls(dd_trx_voice *v, const dd_trx_params *p)
@@ -221,11 +298,18 @@ static void trigger_voice(dd_trx_voice *v)
     if (v->kind == DD_TRX_B2) {
         dd_osc_init(&v->body);
         v->b2_sweep_hz_q8 = v->b2_sweep_start_q8;
+        v->b2_sweep_target_q8 = v->b2_sweep_start_q8;
         v->b2_amp_q24 = 1u << 24;
+        v->b2_amp_target_q24 = v->b2_amp_q24;
         v->b2_short_resid_q24 = v->b2_short_resid_gain ? 1u << 24 : 0;
+        v->b2_short_resid_target_q24 = v->b2_short_resid_q24;
         v->b2_age = 0;
         dd_downsampler_init(&v->rate);
         v->held_sample = 0;
+        v->b2_prev_sample = 0;
+        v->b2_noise_env_q24 = 1u << 24;
+        v->b2_noise_age = 0;
+        v->b2_noise_lp = 0;
         return;
     }
     dd_osc_init(&v->body);
@@ -243,6 +327,7 @@ static void trigger_voice(dd_trx_voice *v)
                        (int16_t)v->hold_samples);
     dd_downsampler_init(&v->rate);
     v->held_sample = 0;
+    v->b2_prev_sample = 0;
 }
 
 static int32_t render_half(dd_trx_voice *v)
@@ -317,13 +402,19 @@ void dd_trx_init(dd_trx_voice *v, dd_trx_kind kind)
     v->held_sample = 0;
     v->b2_base_inc = 0;
     v->b2_sweep_hz_q8 = 0;
+    v->b2_sweep_target_q8 = 0;
     v->b2_sweep_start_q8 = 0;
     v->b2_age = 0;
     v->b2_short_resid_q24 = 0;
+    v->b2_short_resid_target_q24 = 0;
     v->b2_hold_samples = 0;
     v->b2_decay_coeff = 0;
     v->b2_late_coeff = 0;
     v->b2_amp_q24 = 0;
+    v->b2_amp_target_q24 = 0;
+    v->b2_noise_env_q24 = 0;
+    v->b2_noise_age = 0;
+    v->b2_noise_lp = 0;
     v->b2_tick = 0;
     v->b2_noise = 0;
     v->b2_dirt = 0;
@@ -341,8 +432,30 @@ void dd_trx_render(dd_trx_voice *v, const dd_trx_params *p,
     if (trigger)
         trigger_voice(v);
     for (i = 0; i < size; ++i) {
-        if (dd_downsampler_should_process(&v->rate))
+        if (dd_downsampler_should_process(&v->rate)) {
+            v->b2_prev_sample = v->held_sample;
             v->held_sample = render_half(v);
-        out[i] = v->held_sample * 65536;
+            out[i] = v->kind == DD_TRX_B2 ?
+                v->b2_prev_sample / 2 + v->held_sample / 2 :
+                v->held_sample * 65536;
+        } else {
+            out[i] = v->kind == DD_TRX_B2 ?
+                v->held_sample : v->held_sample * 65536;
+        }
+        if (v->kind == DD_TRX_B2 && v->b2_noise &&
+            v->b2_noise_env_q24 > 256u) {
+            int32_t white = dd_noise_q15(&v->noise);
+            int32_t gain = (int32_t)v->b2_noise * 13000 / 127;
+            int32_t shaped, noise, mixed;
+            v->b2_noise_lp += dd_mul_q15(white - v->b2_noise_lp, 21300);
+            shaped = dd_mul_q15(v->b2_noise_lp, gain);
+            noise = dd_mul_q15(shaped, (int32_t)(v->b2_noise_env_q24 >> 9));
+            mixed = out[i] + dd_mul_q15(noise, v->level) * 65536;
+            out[i] = dd_clamp(mixed, -17300 * 65536, 17300 * 65536);
+            ++v->b2_noise_age;
+            if ((v->b2_noise_age & 15u) == 0u)
+                v->b2_noise_env_q24 =
+                    b2_mul_q15_u24(v->b2_noise_env_q24, 31575u);
+        }
     }
 }

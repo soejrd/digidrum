@@ -50,15 +50,27 @@ OS 1.53 file:
 ```sh
 ELEKLOADER_CROSS=m68k-elf- PYTHONPATH=../elekloader ../digiemu/.venv/bin/python -m elekloader.sdk.build ../elekloader/mods/core --stock ../firmware/Digitakt_OS1.53_dist/Digitakt_OS1.53.syx --out out/core-build
 ELEKLOADER_CROSS=m68k-elf- PYTHONPATH=../elekloader ../digiemu/.venv/bin/python -m elekloader.sdk.build . --stock ../firmware/Digitakt_OS1.53_dist/Digitakt_OS1.53.syx --out out/trx-build
-PYTHONPATH=../elekloader ../digiemu/.venv/bin/python -m elekloader.lint out/trx-build/digidrum-spike-0.2.0.elemod --stock ../firmware/Digitakt_OS1.53_dist/Digitakt_OS1.53.syx --with out/core-build/core-2.1.elemod --json
-PYTHONPATH=../elekloader ../digiemu/.venv/bin/python -m elekloader.patch --stock ../firmware/Digitakt_OS1.53_dist/Digitakt_OS1.53.syx --mod out/core-build/core-2.1.elemod --mod out/trx-build/digidrum-spike-0.2.0.elemod --out out/Digitakt_OS1.53_DIGIDRUM_TRX3.syx --version TRX3
+PYTHONPATH=../elekloader ../digiemu/.venv/bin/python -m elekloader.lint ../digisophie/release/digihealth-1.0.1.elemod --stock ../firmware/Digitakt_OS1.53_dist/Digitakt_OS1.53.syx --with out/core-build/core-2.1.elemod --with out/trx-build/digidrum-spike-0.2.0.elemod --json
+PYTHONPATH=../elekloader ../digiemu/.venv/bin/python -m elekloader.patch --stock ../firmware/Digitakt_OS1.53_dist/Digitakt_OS1.53.syx --mod out/core-build/core-2.1.elemod --mod out/trx-build/digidrum-spike-0.2.0.elemod --mod ../digisophie/release/digihealth-1.0.1.elemod --out out/Digitakt_OS1.53_DIGIDRUM_TRX5_HEALTH.syx --version T5DH
 ```
 
 Double-click `Open Digidrum.command` to import and launch that image in Digiemu.
 On this host, the October 5 setup reached Digiemu's cold boot and then the
 installed Unicorn native library raised `Illegal instruction` inside
-`unicorn.mem_map` in the local command-line environment. The TRX3 image includes the first measured regression pass; listening in the user's working Digiemu setup remains the next check.
+`unicorn.mem_map` in the local command-line environment. The TRX5 image includes
+the smoother, higher precision tail and continuous DIRT model. The launcher's
+image also includes digihealth 1.0.1. In SETTINGS, enable SYSTEM INFO for the
+CPU/DSP top-bar readout. FAST AUDIO starts off, so the first measurement shows
+Digidrum's cost without that optimization. Hardware measurements remain the
+next check.
 The SysEx patcher verified its unmodified sections and patched main image.
+
+`out/Digitakt_OS1.53_DIGIDRUM_TRX5_HEALTH.syx` is an OS update image for the
+original Digitakt Mk1, built from the owner's stock OS 1.53. It is the image
+used by the launcher and can be sent to that device with Elektron Transfer.
+It has passed Elekloader's format, patch, and link checks; actual hardware
+audio and CPU load are not yet verified. Keep the stock OS update available
+for recovery. It is not a Digitakt II image.
 
 ## Recommended document order
 

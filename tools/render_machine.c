@@ -8,6 +8,9 @@
 
 static void le16(FILE *f, uint16_t v) { fputc(v & 255, f); fputc(v >> 8, f); }
 static void le32(FILE *f, uint32_t v) { le16(f, (uint16_t)v); le16(f, (uint16_t)(v >> 16)); }
+static void le24(FILE *f, uint32_t v) {
+    fputc(v & 255, f); fputc((v >> 8) & 255, f); fputc((v >> 16) & 255, f);
+}
 
 static int number(const char *s, uint32_t max, uint32_t *out)
 {
@@ -60,20 +63,20 @@ int main(int argc, char **argv)
         } else if (!strcmp(argv[i], "--output")) output = argv[i+1];
         else goto usage;
     }
-    if (!output || !have_params || trigger >= frames || frames > (UINT32_MAX - 36u) / 2u) goto usage;
+    if (!output || !have_params || trigger >= frames || frames > (UINT32_MAX - 36u) / 3u) goto usage;
     f = fopen(output, "wb");
     if (!f) { perror(output); return 1; }
-    fwrite("RIFF", 1, 4, f); le32(f, 36u + frames * 2u);
+    fwrite("RIFF", 1, 4, f); le32(f, 36u + frames * 3u);
     fwrite("WAVEfmt ", 1, 8, f); le32(f, 16); le16(f, 1); le16(f, 1);
-    le32(f, 48000); le32(f, 96000); le16(f, 2); le16(f, 16);
-    fwrite("data", 1, 4, f); le32(f, frames * 2u);
+    le32(f, 48000); le32(f, 144000); le16(f, 3); le16(f, 24);
+    fwrite("data", 1, 4, f); le32(f, frames * 3u);
     dd_trx_init(&voice, kind);
     for (i = 0; i < frames; i += n) {
         n = frames - i;
         if (n > DD_BLOCK_SIZE) n = DD_BLOCK_SIZE;
         if (i < trigger && i + n > trigger) n = trigger - i;
         dd_trx_render(&voice, &p, i == trigger, block, n);
-        for (uint32_t j = 0; j < n; ++j) le16(f, (uint16_t)(block[j] >> 16));
+        for (uint32_t j = 0; j < n; ++j) le24(f, (uint32_t)(block[j] >> 8));
     }
     if (fclose(f)) { perror(output); return 1; }
     return 0;

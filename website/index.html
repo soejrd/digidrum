@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Machine Test - TRX_MD</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Machine Test</h1>
+        <div class="controls">
+            <label for="machine-select">Machine:</label>
+            <select id="machine-select">
+                <option value="trx_md">TRX_MD</option>
+            </select>
+            <button id="play-btn">Play</button>
+            <button id="stop-btn">Stop</button>
+        </div>
+        
+        <div class="encoders-grid">
+            <!-- 8 encoder knobs in 2 rows 4 columns -->
+            <div class="knob-wrapper" data-param="pitch" data-value="64">
+                <div class="knob-container">
+                    <div class="ring"></div>
+                    <div class="ring-fill"></div>
+                    <div class="space"></div>
+                    <div class="knob">
+                        <div class="knob-indicator-container">
+                            <div class="knob-indicator"></div>
+                        </div>
+                    </div>
+                </div>
+                <label class="param-name">Pitch</label>
+            </div>
+            <div class="knob-wrapper" data-param="decay" data-value="64">
+                <div class="knob-container">
+                    <div class="ring"></div>
+                    <div class="ring-fill"></div>
+                    <div class="space"></div>
+                    <div class="knob">
+                        <div class="knob-indicator-container">
+                            <div class="knob-indicator"></div>
+                        </div>
+                    </div>
+                </div>
+                <label class="param-name">Decay</label>
+            </div>
+            <div class="knob-wrapper" data-param="ramp" data-value="64">
+                <div class="knob-container">
+                    <div class="ring"></div>
+                    <div class="ring-fill"></div>
+                    <div class="space"></div>
+                    <div class="knob">
+                        <div class="knob-indicator-container">
+                            <div class="knob-indicator"></div>
+                        </div>
+                    </div>
+                </div>
+                <label class="param-name">Ramp</label>
+            </div>
+            <div class="knob-wrapper" data-param="hold" data-value="0">
+                <div class="knob-container">
+                    <div class="ring"></div>
+                    <div class="ring-fill"></div>
+                    <div class="space"></div>
+                    <div class="knob">
+                        <div class="knob-indicator-container">
+                            <div class="knob-indicator"></div>
+                        </div>
+                    </div>
+                </div>
+                <label class="param-name">Hold</label>
+            </div>
+            <div class="knob-wrapper" data-param="tick" data-value="0">
+                <div class="knob-container">
+                    <div class="ring"></div>
+                    <div class="ring-fill"></div>
+                    <div class="space"></div>
+                    <div class="knob">
+                        <div class="knob-indicator-container">
+                            <div class="knob-indicator"></div>
+                        </div>
+                    </div>
+                </div>
+                <label class="param-name">Tick</label>
+            </div>
+            <div class="knob-wrapper" data-param="noise" data-value="0">
+                <div class="knob-container">
+                    <div class="ring"></div>
+                    <div class="ring-fill"></div>
+                    <div class="space"></div>
+                    <div class="knob">
+                        <div class="knob-indicator-container">
+                            <div class="knob-indicator"></div>
+                        </div>
+                    </div>
+                </div>
+                <label class="param-name">Noise</label>
+            </div>
+            <div class="knob-wrapper" data-param="dirt" data-value="0">
+                <div class="knob-container">
+                    <div class="ring"></div>
+                    <div class="ring-fill"></div>
+                    <div class="space"></div>
+                    <div class="knob">
+                        <div class="knob-indicator-container">
+                            <div class="knob-indicator"></div>
+                        </div>
+                    </div>
+                </div>
+                <label class="param-name">Dirt</label>
+            </div>
+            <div class="knob-wrapper" data-param="dist" data-value="0">
+                <div class="knob-container">
+                    <div class="ring"></div>
+                    <div class="ring-fill"></div>
+                    <div class="space"></div>
+                    <div class="knob">
+                        <div class="knob-indicator-container">
+                            <div class="knob-indicator"></div>
+                        </div>
+                    </div>
+                </div>
+                <label class="param-name">Dist</label>
+            </div>
+        </div>
+        
+        <div class="sequencer">
+            <h2>Sequencer</h2>
+            <div class="tempo-control">
+                <label for="tempo">Tempo (BPM):</label>
+                <input type="range" id="tempo" min="30" max="240" value="120">
+                <span id="tempo-value">120</span> BPM
+            </div>
+            <div class="steps-container">
+                <div class="steps">
+                    <!-- 16 steps -->
+                    <div class="step" id="step-1"></div>
+                    <div class="step" id="step-2"></div>
+                    <div class="step" id="step-3"></div>
+                    <div class="step" id="step-4"></div>
+                    <div class="step" id="step-5"></div>
+                    <div class="step" id="step-6"></div>
+                    <div class="step" id="step-7"></div>
+                    <div class="step" id="step-8"></div>
+                    <div class="step" id="step-9"></div>
+                    <div class="step" id="step-10"></div>
+                    <div class="step" id="step-11"></div>
+                    <div class="step" id="step-12"></div>
+                    <div class="step" id="step-13"></div>
+                    <div class="step" id="step-14"></div>
+                    <div class="step" id="step-15"></div>
+                    <div class="step" id="step-16"></div>
+                </div>
+                <div class="playhead"></div>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
