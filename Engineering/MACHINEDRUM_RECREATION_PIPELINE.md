@@ -13,7 +13,7 @@ The working TRX-B2 implementation and commands are documented in [`tests/md_refe
 | Interactions | At most two justified 3×3 grids | Evidence shows another pair changes behavior |
 | Analysis | Compact feature JSON and a short characterization | Features and listening disagree |
 | Regression | Host renders for affected groups, then one full comparison at a milestone | A change touches shared DSP or state |
-| Listening | A few named patches and the failure being investigated | The user finds another audible mismatch |
+| Listening | Use the one-voice browser interface for a few named patches and the failure being investigated | The user finds another audible mismatch |
 
 Keep the WAVs as evidence on disk. Give an agent the manifest, compact measurements, characterization, and a few relevant report rows. Do not paste whole WAVs or full 77-case JSON reports into a conversation.
 
@@ -59,14 +59,14 @@ Write one short `CHARACTERIZATION.md` containing measured facts, the simplest sy
 
 ## 4. Implement and compare cheaply
 
-Compile the **same C source** for the host renderer and ColdFire firmware. Build the simplest topology consistent with the measurements. Keep costly mapping work outside the audio loop and avoid unsupported 64-bit target arithmetic. Preserve enough internal precision for long decays; truncating a quiet body to 16 bits or stepping envelopes in large blocks can sound metallic even if broad envelope metrics match.
+Compile the **same C source** for the host renderer, [browser interface](../website/README.md), and ColdFire firmware. Build the simplest topology consistent with the measurements. Keep costly mapping work outside the audio loop and avoid unsupported 64-bit target arithmetic. Preserve enough internal precision for long decays; truncating a quiet body to 16 bits or stepping envelopes in large blocks can sound metallic even if broad envelope metrics match.
 
 Use the same cases and measurement code for reference and candidate. On each edit:
 
 1. Render and inspect the affected group or a few direct cases.
 2. Compare the feature that motivated the edit in the relevant time window. For NOIS, inspect high-frequency energy at the attack and 10–70 ms, not only global RMS. For an alias-like tail, inspect the clean body at 200–500 ms. For DIRT, compare values immediately on both sides of a threshold.
-3. Run the full suite after shared topology, envelope, or output-precision changes, or before an emulator/hardware handoff.
-4. Ask for a short listening check of the specific unresolved sound. Fix that mismatch before broadening the capture plan.
+3. Run `make web` after a C change and listen in the browser's one-voice sequencer. The AudioWorklet uses a WASM build of the shared C DSP, so knob sweeps, retriggers, and audible A/B checks need no firmware rebuild or Digiemu launch. Ask for a short check of the specific unresolved sound.
+4. Run the full suite after shared topology, envelope, or output-precision changes, or before an emulator/hardware handoff. Fix the named mismatch before broadening the capture plan.
 
 Compare absolute band levels as well as normalized spectra: a candidate can have a similar centroid while its noise burst is much too quiet. Broad features do not prove sonic identity. Avoid fitting phase-aligned samples when two valid oscillators can differ by phase.
 
@@ -74,7 +74,7 @@ TRX-B2 illustrates a productive iteration: the first 77-case pass matched DEC an
 
 ## 5. Validate the target
 
-Before a user test, run host tests, ColdFire compilation/linking, mod lint, and SysEx patch verification. The host renderer should retain at least 24-bit PCM when inspecting low-level tail artifacts. Digiemu listening checks sound and controls; it does not establish physical CPU headroom. On the Digitakt Mk1, measure one voice, repeated triggers, and worst-case simultaneous voices with digihealth, first with FAST AUDIO off. Record DSP current/peak and CPU load, then repeat with FAST AUDIO on if needed. A well-formed `.syx` is not proof that hardware timing is safe.
+Use the browser for fast algorithm listening, then run host tests, ColdFire compilation/linking, mod lint, and SysEx patch verification before a firmware handoff. The host renderer should retain at least 24-bit PCM when inspecting low-level tail artifacts. Browser audio does not include the Digitakt's stock processing path; Digiemu checks that integration and the controls. Neither establishes physical CPU headroom. On the Digitakt Mk1, measure one voice, repeated triggers, and worst-case simultaneous voices with digihealth, first with FAST AUDIO off. Record DSP current/peak and CPU load, then repeat with FAST AUDIO on if needed. A well-formed `.syx` is not proof that hardware timing is safe.
 
 ## Stop rules and handoff
 

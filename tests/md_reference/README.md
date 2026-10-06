@@ -49,12 +49,23 @@ out/render_machine --machine trx_b2 --params 64,127,64,0,64,127,0,0 --frames 960
 
 The eight comma-separated controls are `PTCH,DEC,RAMP,HOLD,TICK,NOIS,DIRT,DIST`. `--frames` includes the 12,000-frame pre-trigger interval. Choose a longer value when DEC or HOLD is high; the two-second command above is only an attack check. Full case comparisons are written to `report/comparison.json`; [`machines/trx_b2/REGRESSION.md`](machines/trx_b2/REGRESSION.md) carries the compact conclusions. Do not print the entire JSON report to inspect one parameter. `compare` reads all valid files, so a group-only render can leave older candidate files for other groups. Rerender all groups before quoting a new full-suite result.
 
+## Fast browser listening
+
+The [one-voice web interface](../../website/README.md) runs a WASM build of the same C TRX source inside an AudioWorklet. Use it for immediate listening while changing the algorithm, testing knob transitions, and retriggering a short pattern. From the `digidrum` root:
+
+```sh
+make web
+python3 -m http.server 8000 --directory website
+```
+
+Open `http://localhost:8000` and reload after each `make web`. This removes the firmware build and Digiemu launch from the inner audio-tuning loop. The browser requires 48 kHz and tests one voice; it does not reproduce the Digitakt's stock filter, overdrive, mixer, or hardware CPU cost. Keep the headless Gearmulator WAVs and host feature comparison as the reference checks.
+
 ## Efficient regression loop
 
 1. State one audible or measured mismatch and choose a few cases that expose it.
 2. Reuse valid reference WAVs. Capture new Gearmulator audio only for a missing time window, threshold, or interaction.
 3. Measure the relevant window with absolute as well as normalized levels. NOIS needed 0–70 ms high-frequency bands; the metallic tail needed clean-body spectra at 200–500 ms. A 20 ms centroid alone missed both problems.
-4. Change the C model and rerender only the affected group. Run all 77 cases after shared DSP changes or before handing off a firmware image.
-5. Run `make test cross-check`, mod lint, and SysEx patch verification for a target build. Ask for a short, specific listening check; use digihealth on the Digitakt Mk1 for CPU/DSP measurements.
+4. Change the C model, run `make web`, and listen to the named mismatch in the browser. Rerender only the affected host group for measurements; run all 77 cases after shared DSP changes or before handing off a firmware image.
+5. Run `make test cross-check`, mod lint, and SysEx patch verification for a target build. Check integration in Digiemu and use digihealth on the Digitakt Mk1 for CPU/DSP measurements.
 
 The current measurement code estimates pitch from positive zero crossings, which can misread noise or clipped sounds. It also does not characterize retrigger state or detailed distortion texture. Add targeted tests for those questions instead of expanding every sweep by default.
