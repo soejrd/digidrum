@@ -51,13 +51,13 @@ OS 1.53 file:
 ELEKLOADER_CROSS=m68k-elf- PYTHONPATH=../elekloader ../digiemu/.venv/bin/python -m elekloader.sdk.build ../elekloader/mods/core --stock ../firmware/Digitakt_OS1.53_dist/Digitakt_OS1.53.syx --out out/core-build
 ELEKLOADER_CROSS=m68k-elf- PYTHONPATH=../elekloader ../digiemu/.venv/bin/python -m elekloader.sdk.build . --stock ../firmware/Digitakt_OS1.53_dist/Digitakt_OS1.53.syx --out out/trx-build
 PYTHONPATH=../elekloader ../digiemu/.venv/bin/python -m elekloader.lint out/trx-build/digidrum-spike-0.2.0.elemod --stock ../firmware/Digitakt_OS1.53_dist/Digitakt_OS1.53.syx --with out/core-build/core-2.1.elemod --json
-PYTHONPATH=../elekloader ../digiemu/.venv/bin/python -m elekloader.patch --stock ../firmware/Digitakt_OS1.53_dist/Digitakt_OS1.53.syx --mod out/core-build/core-2.1.elemod --mod out/trx-build/digidrum-spike-0.2.0.elemod --out out/Digitakt_OS1.53_DIGIDRUM_TRX.syx --version TRX1
+PYTHONPATH=../elekloader ../digiemu/.venv/bin/python -m elekloader.patch --stock ../firmware/Digitakt_OS1.53_dist/Digitakt_OS1.53.syx --mod out/core-build/core-2.1.elemod --mod out/trx-build/digidrum-spike-0.2.0.elemod --out out/Digitakt_OS1.53_DIGIDRUM_TRX3.syx --version TRX3
 ```
 
 Double-click `Open Digidrum.command` to import and launch that image in Digiemu.
 On this host, the October 5 setup reached Digiemu's cold boot and then the
 installed Unicorn native library raised `Illegal instruction` inside
-`unicorn.mem_map`; the emulator audio and UI behavior of TRX1 remains unverified.
+`unicorn.mem_map` in the local command-line environment. The TRX3 image includes the first measured regression pass; listening in the user's working Digiemu setup remains the next check.
 The SysEx patcher verified its unmodified sections and patched main image.
 
 ## Recommended document order

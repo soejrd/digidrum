@@ -56,6 +56,21 @@ typedef struct {
     int32_t level;
     int32_t hold_samples;
     int32_t held_sample;
+    /* TRX-B2 model, derived from the primed Gearmulator reference capture. */
+    uint32_t b2_base_inc;
+    uint32_t b2_sweep_hz_q8;
+    uint32_t b2_sweep_start_q8;
+    uint32_t b2_age;
+    uint32_t b2_short_resid_q24;
+    uint32_t b2_hold_samples;
+    uint16_t b2_decay_coeff;
+    uint16_t b2_late_coeff;
+    uint32_t b2_amp_q24;
+    uint16_t b2_tick;
+    uint16_t b2_noise;
+    uint16_t b2_dirt;
+    uint16_t b2_dist;
+    uint16_t b2_short_resid_gain;
     dd_trx_kind kind;
     uint8_t params_valid;
 } dd_trx_voice;

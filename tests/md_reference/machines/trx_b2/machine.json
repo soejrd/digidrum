@@ -1,0 +1,14 @@
+{
+  "id": "trx_b2",
+  "reference_name": "TRX-B2",
+  "family": "TRX",
+  "parameters": ["PTCH", "DEC", "RAMP", "HOLD", "TICK", "NOIS", "DIRT", "DIST"],
+  "default_patch": [64, 64, 64, 0, 64, 0, 0, 0],
+  "sweep_values": [0, 25, 51, 76, 102, 127],
+  "interaction_values": [0, 64, 127],
+  "interactions": [["RAMP", "HOLD"], ["DEC", "HOLD"]],
+  "sample_rate": 48000,
+  "pre_trigger_ms": 250,
+  "render_duration_policy": "2 + 28*max(0,(DEC-64)/63)^2 + 14*(HOLD/127)^2 seconds, rounded up",
+  "mapping_note": "All eight controls map one-to-one to the Digidrum TRX-B2 controls; track level is separate. The TRX-B2 C model is derived from the primed Gearmulator measurements; audible validation is pending."
+}

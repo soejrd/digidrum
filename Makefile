@@ -59,6 +59,9 @@ out/render_benchmark: tools/benchmark_voice.c tools/benchmark_voice.h include/dd
 out/render_trx_md: tools/render_trx_md.c machines/trx_md.c include/dd_trx_md.h dsp/osc.c dsp/tables.c dsp/envelope.c | out
 	$(CC) $(CFLAGS) $(INCFLAGS) tools/render_trx_md.c machines/trx_md.c dsp/osc.c dsp/tables.c dsp/envelope.c -o $@
 
+out/render_machine: tools/render_machine.c machines/trx_md.c include/dd_trx_md.h dsp/osc.c dsp/tables.c dsp/envelope.c | out
+	$(CC) $(CFLAGS) $(INCFLAGS) tools/render_machine.c machines/trx_md.c dsp/osc.c dsp/tables.c dsp/envelope.c -o $@
+
 test: out/test_percussion out/test_fixed out/test_tables out/test_osc out/test_envelope out/test_noise out/test_filter out/test_resonator out/test_rate out/test_param_cache out/test_benchmark_voice out/test_trx_md
 	./out/test_percussion
 	./out/test_fixed
@@ -117,5 +120,5 @@ cross-check-dsp: | out
 	$(CROSS)size -A out/cross/tables.o out/cross/osc.o out/cross/envelope.o out/cross/filter.o out/cross/benchmark_voice.o out/cross/trx_md.o
 
 clean:
-	rm -f out/test_* out/render_demo out/render_benchmark out/render_trx_md out/pulse-bd.wav out/benchmark-voice.wav out/trx-b2.wav out/trx-bd.wav out/trx-sd.wav
+	rm -f out/test_* out/render_demo out/render_benchmark out/render_trx_md out/render_machine out/pulse-bd.wav out/benchmark-voice.wav out/trx-b2.wav out/trx-bd.wav out/trx-sd.wav
 	rm -rf out/cross

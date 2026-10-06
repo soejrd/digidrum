@@ -2,3 +2,10 @@ out/
 *.o
 *.elemod
 *.syx
+tests/md_reference/machines/*/reference/*.wav
+tests/md_reference/machines/*/candidate/*.wav
+tests/md_reference/machines/*/measurements/*.json
+tests/md_reference/machines/*/report/*.json
+**/__pycache__/
+tests/md_reference/scripts/*.RPP
+tests/md_reference/scripts/Media/

@@ -1,11 +1,11 @@
 #!/bin/zsh
-# Double-click this file in Finder to open Digidrum TRX1 in Digiemu.
+# Double-click this file in Finder to open Digidrum TRX3 in Digiemu.
 set -u
 
 here="${0:A:h}"
 emu="$here/../digiemu"
 python="$emu/.venv/bin/python"
-firmware="$here/out/Digitakt_OS1.53_DIGIDRUM_TRX.syx"
+firmware="$here/out/Digitakt_OS1.53_DIGIDRUM_TRX3.syx"
 data="$here/out/trx-emulator"
 
 if [[ ! -x "$python" || ! -f "$firmware" ]]; then

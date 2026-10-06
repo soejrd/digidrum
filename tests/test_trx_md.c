@@ -146,13 +146,15 @@ static void test_control_meanings(void)
     assert(energy(held_hit + N / 2, N / 2) >
            energy(short_hit + N / 2, N / 2));
 
-    p.control[6] = 0;
+    p = defaults(DD_TRX_B2);
     dd_trx_init(&a, DD_TRX_B2);
+    dd_trx_render(&a, &p, 0, short_hit, DD_BLOCK_SIZE);
+    assert(energy(short_hit, DD_BLOCK_SIZE) == 0);
     dd_trx_render(&a, &p, 1, short_hit, DD_BLOCK_SIZE);
-    assert(a.bits == 12);
+    assert(energy(short_hit, DD_BLOCK_SIZE) > 0);
     p.control[6] = 32767;
     dd_trx_render(&a, &p, 0, short_hit, DD_BLOCK_SIZE);
-    assert(a.bits == 2);
+    assert(a.b2_dirt == 127);
 
     p = defaults(DD_TRX_BD);
     p.control[3] = 0;
