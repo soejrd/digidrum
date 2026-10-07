@@ -5,6 +5,7 @@
  */
 #include "../include/dd_trx_family.h"
 #include "../include/dd_fixed.h"
+#include "../include/dd_tables.h"
 
 #define RATE 48000u
 #define PHASE_HZ 89478u /* round(2^32 / 48000) */
@@ -15,12 +16,24 @@ static uint32_t ctl(const dd_trx_family_voice *v, uint32_t i)
 {
     return (uint32_t)v->control[i] >> 8;
 }
+/* The EFM-BD DEC response gives finer resolution to short decays. */
+static uint32_t sd_decay_control(uint32_t control)
+{
+    if (control <= 32u) return control * 10u / 32u;
+    if (control <= 64u) return 10u + (control - 32u) * 15u / 32u;
+    if (control <= 96u) return 25u + (control - 64u) * 25u / 32u;
+    return 50u + (control - 96u) * 77u / 31u;
+}
 static uint32_t decay_step(uint32_t ms)
 {
     /* Linear envelope reaches zero after approximately the requested duration. */
     uint32_t samples = ms * 48u;
     if (samples < 1u) samples = 1u;
     return ENV_ONE / samples;
+}
+static uint32_t scaled_step(uint32_t step, uint32_t percent)
+{
+    return step * 100u / percent;
 }
 static uint32_t decay(uint32_t value, uint32_t step)
 {
@@ -52,6 +65,8 @@ static int32_t metal(dd_trx_family_voice *v)
     uint32_t i;
     for (i = 0; i < 6u; ++i)
         sum += dd_osc_square_fast(&v->osc[i], v->inc[i], 0x80000000u) >> 3;
+    if (v->algorithm.metal_percent != 100u)
+        sum = sum * (int32_t)v->algorithm.metal_percent / 100;
     return dd_clamp_q15(sum);
 }
 
@@ -68,6 +83,7 @@ void dd_trx_family_init(dd_trx_family_voice *v, dd_trx_family_kind kind)
     for (i = 0; i < 8u; ++i) dd_onepole_init(&v->filter[i]);
     dd_noise_init(&v->noise, 0x731C92A5u + (uint32_t)kind);
     v->kind = kind;
+    v->algorithm = dd_trx_default_algorithm;
     v->age = v->sweep = v->sweep_step = 0;
     v->double_at = v->gap_at = 0;
     v->env = v->aux_env = v->snap_env = 0;
@@ -91,12 +107,12 @@ static void configure(dd_trx_family_voice *v, const dd_trx_params *p, int trigge
     length = ctl(v, 1);
     switch (v->kind) {
     case DD_TRXF_SD:
-        /* PTCH moves the filtered noise; the two tonal pitches are separate. */
-        v->inc[0] = hz_inc(180u);
-        v->inc[1] = hz_inc(220u + ctl(v, 6));
-        v->env_step = decay_step(45u + length * 5u);
-        v->aux_step = decay_step(80u + length * 8u);
-        v->snap_step = decay_step(3u + length / 3u);
+        /* PTCH morphs the 340 Hz body; TUNE spans 800-2000 Hz above it. */
+        v->inc[0] = hz_inc(340u);
+        v->inc[1] = hz_inc(800u + ctl(v, 6) * 1200u / 127u);
+        v->env_step = decay_step(45u + sd_decay_control(length) * 5u);
+        v->aux_step = decay_step(150u); /* noise tail, before the common DEC */
+        v->snap_step = ENV_ONE;
         if (trigger) v->sweep = hz_inc(ctl(v, 2) * 3u);
         v->sweep_step = hz_inc(ctl(v, 2) * 3u) /
                         (150u + ctl(v, 3) * 32u);
@@ -144,6 +160,17 @@ static void configure(dd_trx_family_voice *v, const dd_trx_params *p, int trigge
         break;
     default: break;
     }
+    for (i = 0; i < 6u; ++i)
+        v->inc[i] = (uint32_t)((v->inc[i] / 100u) * v->algorithm.pitch_percent +
+            (v->inc[i] % 100u) * v->algorithm.pitch_percent / 100u);
+    v->env_step = scaled_step(v->env_step, v->algorithm.decay_percent);
+    v->aux_step = scaled_step(v->aux_step, v->algorithm.transient_percent);
+    v->snap_step = scaled_step(v->snap_step, v->algorithm.transient_percent);
+    if (trigger)
+        v->sweep = v->sweep / 100u * v->algorithm.sweep_percent +
+            v->sweep % 100u * v->algorithm.sweep_percent / 100u;
+    v->sweep_step = v->sweep_step / 100u * v->algorithm.sweep_percent +
+        v->sweep_step % 100u * v->algorithm.sweep_percent / 100u;
 }
 
 static int32_t hat_half_sample(dd_trx_family_voice *v)
@@ -154,6 +181,8 @@ static int32_t hat_half_sample(dd_trx_family_voice *v)
     if (v->age > v->gap_at)
         v->env = decay(v->env, v->env_step * 2u);
     n = dd_noise_q15(&v->noise);
+    if (v->algorithm.noise_percent != 100u)
+        n = dd_clamp_q15(n * (int32_t)v->algorithm.noise_percent / 100);
     x = metal(v);
     x = (x * (64 + v->metal_mix) + n * (128 - v->metal_mix)) >> 8;
     x -= v->filter[3].lp >> 4;
@@ -178,18 +207,24 @@ static int32_t sample(dd_trx_family_voice *v)
     v->snap_env = decay(v->snap_env, v->snap_step);
     if (v->sweep) v->sweep = decay(v->sweep, v->sweep_step);
     n = dd_noise_q15(&v->noise);
+    if (v->algorithm.noise_percent != 100u)
+        n = dd_clamp_q15(n * (int32_t)v->algorithm.noise_percent / 100);
     switch (v->kind) {
     case DD_TRXF_SD:
-        a = dd_osc_sine(&v->osc[0], v->inc[0] + v->sweep);
-        b = dd_osc_sine(&v->osc[1], v->inc[1] + v->sweep);
-        x = mul_env(a, v->env) * 2 / 3;
-        x += mul_env(b, v->env) * (int32_t)ctl(v, 5) / 256;
-        /* Narrow moving noise band: PTCH changes no tonal oscillator. */
-        y = dd_onepole_hp(&v->filter[0], n, 28500 - (int32_t)ctl(v, 0) * 70);
-        y = dd_onepole_lp(&v->filter[1], y, 25800 - (int32_t)ctl(v, 0) * 70);
-        x += mul_env(y, v->aux_env) * (int32_t)ctl(v, 4) / 128;
-        x += mul_env(y, v->snap_env) * (int32_t)ctl(v, 4) / 384;
-        return soft(x, ctl(v, 7));
+        /* Advance the lower oscillator once, then blend two views of its phase. */
+        a = dd_osc_triangle(&v->osc[0], v->inc[0] + v->sweep);
+        b = dd_sine_tab[v->osc[0].phase >> (32u - DD_SINE_SIZE_LOG2)];
+        a = (a * (int32_t)(127u - ctl(v, 0)) +
+             b * (int32_t)ctl(v, 0)) / 127;
+        b = dd_osc_sine(&v->osc[1], v->inc[1]);
+        y = dd_onepole_hp(&v->filter[0], n, 26120);
+        y = dd_onepole_lp(&v->filter[1], y, 23420);
+        y = mul_env(y, v->aux_env);
+        /* Active sources share one -6 dB budget before DEC and CLIP. */
+        x = (a * 127 + b * (int32_t)ctl(v, 5) +
+             y * (int32_t)ctl(v, 4)) /
+            (int32_t)(127u + ctl(v, 5) + ctl(v, 4));
+        return soft(mul_env(x / 2, v->env), ctl(v, 7) * 20);
     case DD_TRXF_CY:
         a = metal(v);
         x = (a * 3 + n) / 4;
@@ -271,7 +306,10 @@ void dd_trx_family_render(dd_trx_family_voice *v, const dd_trx_params *p,
         } else {
             x = sample(v);
         }
-        x = dd_mul_q15(dd_clamp_q15(x), (int32_t)v->level);
+        x = dd_clamp_q15(x);
+        if (v->algorithm.body_percent != 100u)
+            x = dd_clamp_q15(x * (int32_t)v->algorithm.body_percent / 100);
+        x = dd_mul_q15(x, (int32_t)v->level);
         out[i] = x * 65536;
     }
 }

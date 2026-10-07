@@ -108,6 +108,9 @@ website/trx-synth.wasm: website/trx_web.c machines/trx_md.c machines/trx_family.
 		-Wl,--export=dd_web_efm_tweak_count -Wl,--export=dd_web_efm_tweak_name \
 		-Wl,--export=dd_web_efm_tweak_min -Wl,--export=dd_web_efm_tweak_max \
 		-Wl,--export=dd_web_efm_tweak_get -Wl,--export=dd_web_efm_tweak_set \
+		-Wl,--export=dd_web_trx_tweak_count -Wl,--export=dd_web_trx_tweak_name \
+		-Wl,--export=dd_web_trx_tweak_min -Wl,--export=dd_web_trx_tweak_max \
+		-Wl,--export=dd_web_trx_tweak_get -Wl,--export=dd_web_trx_tweak_set \
 		website/trx_web.c machines/trx_md.c machines/trx_family.c machines/efm.c dsp/osc.c dsp/tables.c dsp/envelope.c \
 		-o $@
 

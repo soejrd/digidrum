@@ -70,16 +70,16 @@ class MachineAudio {
                 const message = event.data;
                 if (message.type === 'ready') {
                     this.tweakDescriptors = message.tweakDescriptors;
-                    if (message.kind >= 8)
-                        this.tweakValuesByKind.set(message.kind, message.tweakValues);
+                    this.tweakValuesByKind.set(message.kind, message.tweakValues);
                     resolve(message.defaults);
                 }
                 else if (message.type === 'error') reject(new Error(message.message));
                 else if (message.type === 'step') this.onStep(message.index);
-                else if (message.type === 'tweak-values' && message.kind >= 8) {
+                else if (message.type === 'tweak-values') {
+                    if (message.kind === this.kind) this.tweakDescriptors = message.descriptors;
                     this.tweakValuesByKind.set(message.kind, message.values);
                     if (message.kind === this.kind) this.onTweaks(message.kind, message.values);
-                } else if (message.type === 'tweak-value' && message.kind >= 8) {
+                } else if (message.type === 'tweak-value') {
                     const values = this.tweakValuesByKind.get(message.kind);
                     if (values) {
                         values[message.index] = message.value;
@@ -168,7 +168,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let editorModule = null;
 
     async function showAlgorithm(kind, values) {
-        if (kind < 8 || kind !== audio.kind || !algorithmDetails.open || !values) return;
+        if (kind !== audio.kind || !algorithmDetails.open || !values) return;
         const needsEditor = !algorithmEditor || algorithmEditor.kind !== kind;
         if (needsEditor) algorithmStatus.textContent = 'Loading algorithm controls…';
         try {
@@ -248,7 +248,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     machineSelect.addEventListener('change', () => {
         const kind = Number(machineSelect.value);
-        algorithmDetails.hidden = kind < 8;
         audio.setKind(kind);
         wrappers.forEach((wrapper, index) => {
             const name = machines[kind].labels[index];
@@ -259,7 +258,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 showKnob(wrapper, audio.controls[index]);
             }
         });
-        if (kind >= 8) showAlgorithm(kind, audio.tweakValuesByKind.get(kind));
     });
     machineSelect.dispatchEvent(new Event('change'));
     audio.ensureReady().catch(() => {}); // Load C defaults while audio remains suspended.

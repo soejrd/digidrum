@@ -20,6 +20,8 @@ const uint8_t dd_trx_defaults_u7[DD_TRX_MACHINE_COUNT][8] = {
 
 const uint8_t dd_trx_control_counts[DD_TRX_MACHINE_COUNT] =
     {8, 8, 5, 5, 6, 3, 8, 6};
+const dd_trx_algorithm dd_trx_default_algorithm =
+    {100u, 100u, 100u, 100u, 100u, 100u, 100u};
 #include "../include/dd_fixed.h"
 #include "../include/dd_tables.h"
 
@@ -129,10 +131,14 @@ static void b2_update(dd_trx_voice *v, const dd_trx_params *p)
     uint16_t decay = b2_control(p->control[1]);
     uint16_t ramp = b2_control(p->control[2]);
     uint16_t hold = b2_control(p->control[3]);
-    uint32_t tau_ms = b2_lookup(b2_decay_ms, 7, decay);
+    uint32_t tau_ms = b2_lookup(b2_decay_ms, 7, decay) *
+        v->algorithm.decay_percent / 100u;
     uint32_t hold_ms = b2_lookup(b2_hold_ms, 7, hold);
-    v->b2_base_inc = b2_lookup(b2_pitch, 7, pitch) * 178957u;
-    v->b2_sweep_start_q8 = (uint32_t)ramp * 870u; /* 3.40 Hz/control */
+    if (tau_ms < 2u) tau_ms = 2u;
+    v->b2_base_inc = b2_lookup(b2_pitch, 7, pitch) * 178957u *
+        v->algorithm.pitch_percent / 100u;
+    v->b2_sweep_start_q8 = (uint32_t)ramp * 870u *
+        v->algorithm.sweep_percent / 100u; /* 3.40 Hz/control at 100% */
     v->b2_decay_coeff = b2_block_decay(tau_ms);
     v->b2_late_coeff = b2_block_decay(tau_ms / 2u);
     v->b2_hold_samples = hold_ms * 24u;
@@ -177,7 +183,9 @@ static int32_t b2_render_half(dd_trx_voice *v)
         (v->b2_short_resid_q24 - v->b2_short_resid_target_q24) *
         (v->b2_age & 31u) / 32u;
     phase_inc = v->b2_base_inc + sweep * 699u;
-    body = b2_mul_q15_s31(b2_sine_q31(&v->body, phase_inc), 8500);
+    body = b2_mul_q15_s31(b2_sine_q31(&v->body, phase_inc),
+                          v->algorithm.body_percent == 100u ? 8500 :
+                          8500 * (int32_t)v->algorithm.body_percent / 100);
     if (v->b2_dirt) {
         int32_t dry = body >> 16, low, high;
         uint16_t position, width;
@@ -227,6 +235,8 @@ static int32_t b2_render_half(dd_trx_voice *v)
             (int32_t)v->b2_tick * 428 :
             10700 + ((int32_t)v->b2_tick - 25) * 250;
         if (impulse > 17200) impulse = 17200;
+        if (v->algorithm.transient_percent != 100u)
+            impulse = impulse * (int32_t)v->algorithm.transient_percent / 100;
         mixed += (impulse * (int32_t)(8u - v->b2_age) / 8) * 65536;
     }
     if (v->b2_short_resid_gain)
@@ -394,6 +404,7 @@ void dd_trx_init(dd_trx_voice *v, dd_trx_kind kind)
     v->b2_dist = 0;
     v->b2_short_resid_gain = 0;
     v->kind = kind;
+    v->algorithm = dd_trx_default_algorithm;
     v->params_valid = 0;
 }
 
@@ -419,12 +430,20 @@ void dd_trx_render(dd_trx_voice *v, const dd_trx_params *p,
             v->b2_noise_env_q24 > 256u) {
             int32_t white = dd_noise_q15(&v->noise);
             int32_t gain = (int32_t)v->b2_noise * 13000 / 127;
-            int32_t shaped, noise, mixed;
+            int32_t shaped, noise, mixed, noise_q31;
+            if (v->algorithm.noise_percent != 100u)
+                gain = gain * (int32_t)v->algorithm.noise_percent / 100;
             v->b2_noise_lp += dd_mul_q15(white - v->b2_noise_lp, 21300);
             shaped = dd_mul_q15(v->b2_noise_lp, gain);
             noise = dd_mul_q15(shaped, (int32_t)(v->b2_noise_env_q24 >> 9));
-            mixed = out[i] + dd_mul_q15(noise, v->level) * 65536;
-            out[i] = dd_clamp(mixed, -17300 * 65536, 17300 * 65536);
+            noise_q31 = dd_mul_q15(noise, v->level) * 65536;
+            if (noise_q31 > 0 && out[i] > 17300 * 65536 - noise_q31)
+                mixed = 17300 * 65536;
+            else if (noise_q31 < 0 && out[i] < -17300 * 65536 - noise_q31)
+                mixed = -17300 * 65536;
+            else
+                mixed = out[i] + noise_q31;
+            out[i] = mixed;
             ++v->b2_noise_age;
             if ((v->b2_noise_age & 15u) == 0u)
                 v->b2_noise_env_q24 =

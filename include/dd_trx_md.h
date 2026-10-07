@@ -28,6 +28,19 @@ typedef enum {
 extern const uint8_t dd_trx_defaults_u7[DD_TRX_MACHINE_COUNT][8];
 extern const uint8_t dd_trx_control_counts[DD_TRX_MACHINE_COUNT];
 
+/* Browser algorithm controls. 100 preserves the firmware sound. */
+typedef struct {
+    uint32_t pitch_percent;
+    uint32_t decay_percent;
+    uint32_t transient_percent;
+    uint32_t sweep_percent;
+    uint32_t noise_percent;
+    uint32_t body_percent;
+    uint32_t metal_percent;
+} dd_trx_algorithm;
+
+extern const dd_trx_algorithm dd_trx_default_algorithm;
+
 /* Control order follows the Machinedrum manual.
  * B2: PTCH DEC RAMP HOLD TICK NOIS DIRT DIST
  * SD: PTCH DEC BUMP BENV SNAP TONE TUNE CLIP */
@@ -41,6 +54,7 @@ typedef struct {
     dd_pitch_sweep_env bump;
     dd_downsampler rate;
     dd_trx_params last_params;
+    dd_trx_algorithm algorithm;
     uint32_t body_inc;
     uint32_t second_inc;
     int32_t decay_coeff;

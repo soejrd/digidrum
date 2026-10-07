@@ -57,6 +57,59 @@ static const efm_tweak_desc tweak_table[] = {
 
 #define TWEAK_COUNT (sizeof(tweak_table) / sizeof(tweak_table[0]))
 
+#define TRX_TWEAK(field, low, high) {#field, offsetof(dd_trx_algorithm, field), low, high}
+static const efm_tweak_desc trx_tweak_table[] = {
+    TRX_TWEAK(pitch_percent, 25, 200),
+    TRX_TWEAK(decay_percent, 10, 300),
+    TRX_TWEAK(transient_percent, 10, 100),
+    TRX_TWEAK(sweep_percent, 0, 200),
+    TRX_TWEAK(noise_percent, 0, 200),
+    TRX_TWEAK(body_percent, 0, 150),
+    TRX_TWEAK(metal_percent, 0, 200)
+};
+#undef TRX_TWEAK
+#define TRX_TWEAK_COUNT (sizeof(trx_tweak_table) / sizeof(trx_tweak_table[0]))
+
+static dd_trx_algorithm *trx_algorithm(void)
+{
+    return current_kind == DD_TRX_B2 ? &voice.algorithm : &family_voice.algorithm;
+}
+
+uint32_t dd_web_trx_tweak_count(void) { return TRX_TWEAK_COUNT; }
+uint32_t dd_web_trx_tweak_name(uint32_t index)
+{
+    return index < TRX_TWEAK_COUNT ?
+        (uint32_t)(uintptr_t)trx_tweak_table[index].name : 0u;
+}
+uint32_t dd_web_trx_tweak_min(uint32_t index)
+{
+    return index < TRX_TWEAK_COUNT ? trx_tweak_table[index].min : 0u;
+}
+uint32_t dd_web_trx_tweak_max(uint32_t index)
+{
+    return index < TRX_TWEAK_COUNT ? trx_tweak_table[index].max : 0u;
+}
+uint32_t dd_web_trx_tweak_get(uint32_t index)
+{
+    const uint8_t *base;
+    if (current_kind >= (int)DD_TRX_MACHINE_COUNT || index >= TRX_TWEAK_COUNT) return 0u;
+    base = (const uint8_t *)trx_algorithm();
+    return *(const uint32_t *)(const void *)(base + trx_tweak_table[index].offset);
+}
+void dd_web_trx_tweak_set(uint32_t index, uint32_t value)
+{
+    uint8_t *base;
+    const efm_tweak_desc *desc;
+    if (current_kind >= (int)DD_TRX_MACHINE_COUNT || index >= TRX_TWEAK_COUNT) return;
+    desc = &trx_tweak_table[index];
+    if (value < desc->min) value = desc->min;
+    if (value > desc->max) value = desc->max;
+    base = (uint8_t *)trx_algorithm();
+    *(uint32_t *)(void *)(base + desc->offset) = value;
+    if (current_kind == DD_TRX_B2) voice.params_valid = 0;
+    else family_voice.params_valid = 0;
+}
+
 uint32_t dd_web_efm_tweak_count(void) { return TWEAK_COUNT; }
 uint32_t dd_web_efm_tweak_name(uint32_t index)
 {

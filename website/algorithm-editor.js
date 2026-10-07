@@ -31,7 +31,25 @@ const used = [
     [...common, ...modTime, ...metallic, 'fb_depth_mult', ...highpass]
 ];
 
+const trxUsed = [
+    ['pitch_percent', 'decay_percent', 'transient_percent', 'sweep_percent',
+        'noise_percent', 'body_percent'],
+    ['pitch_percent', 'decay_percent', 'transient_percent', 'sweep_percent',
+        'noise_percent', 'body_percent'],
+    ['pitch_percent', 'decay_percent', 'noise_percent', 'body_percent', 'metal_percent'],
+    ['pitch_percent', 'decay_percent', 'noise_percent', 'body_percent', 'metal_percent'],
+    ['pitch_percent', 'decay_percent', 'transient_percent', 'noise_percent',
+        'body_percent', 'metal_percent'],
+    ['pitch_percent', 'decay_percent', 'transient_percent', 'body_percent'],
+    ['pitch_percent', 'decay_percent', 'transient_percent', 'sweep_percent',
+        'noise_percent', 'body_percent'],
+    ['pitch_percent', 'decay_percent', 'transient_percent', 'noise_percent', 'body_percent']
+];
+
 const groups = [
+    ['Pitch and sweep', /^(pitch_|sweep_)/],
+    ['Decay and attack', /^(decay_|transient_)/],
+    ['Source balance', /^(noise_|body_|metal_)/],
     ['Pitch', /^(c\d?_.*hz|m\d?_.*hz|rim_|cb_ratio|sweep_|ratio_|phase_|bd_mod_ratio)/],
     ['Envelopes', /^(amp_|mod_.*ms|ramp_.*ms|aux_|cb_aux_|clap_|bd_mod_attack)/],
     ['Modulation and mix', /^(depth_|fb_|noise_|snap_|bd_index)/],
@@ -41,6 +59,15 @@ const groups = [
 
 function groupName(field) {
     return groups.find(([, pattern]) => pattern.test(field))?.[0] || 'Other';
+}
+
+function fieldLabel(kind, name) {
+    if (kind < 8) {
+        if (name === 'body_percent') return kind === 0 ? 'body level %' : 'output level %';
+        if (name === 'transient_percent') return kind === 0 ? 'tick level %' : 'transient length %';
+        if (name === 'decay_percent') return 'decay time %';
+    }
+    return name.replaceAll('_', ' ');
 }
 
 export class AlgorithmEditor {
@@ -60,16 +87,16 @@ export class AlgorithmEditor {
         this.state = Object.fromEntries(descriptors.map((desc, index) =>
             [desc.name, values[index]]));
         this.pane = new Pane({container: this.container});
-        const relevant = new Set(used[kind - 8] || []);
+        const relevant = new Set(kind < 8 ? trxUsed[kind] : used[kind - 8]);
         for (const [title] of groups) {
             const entries = descriptors.map((desc, index) => ({...desc, index}))
                 .filter(desc => relevant.has(desc.name) && groupName(desc.name) === title);
             if (!entries.length) continue;
-            const folder = this.pane.addFolder({title, expanded: title === 'Pitch'});
+            const folder = this.pane.addFolder({title, expanded: title === 'Pitch' || title === 'Pitch and sweep'});
             for (const desc of entries) {
                 folder.addBinding(this.state, desc.name, {
                     min: desc.min, max: desc.max, step: 1,
-                    label: desc.name.replaceAll('_', ' ')
+                    label: fieldLabel(kind, desc.name)
                 }).on('change', event => this.onChange(desc.index, Math.round(event.value)));
             }
         }

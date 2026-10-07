@@ -52,6 +52,23 @@ const hit = block();
 assert.ok(hit.some(sample => Math.abs(sample) > 0.01));
 assert.ok(block().some(sample => sample !== 0)); // voice survives the block
 
+assert.equal(posted[0].tweakDescriptors[0].name, 'pitch_percent');
+assert.ok(posted[0].tweakValues.every(value => value === 100));
+await processor.onMessage({type: 'kind', kind: 0});
+await processor.onMessage({type: 'trigger'});
+const baseline = block();
+await processor.onMessage({type: 'kind', kind: 0});
+await processor.onMessage({type: 'tweak-set', index: 0, value: 150});
+assert.equal(posted.at(-1).value, 150);
+await processor.onMessage({type: 'trigger'});
+assert.notDeepEqual(block(), baseline, 'TRX pitch tweak changes rendered sound');
+await processor.onMessage({type: 'kind', kind: 1});
+await processor.onMessage({type: 'kind', kind: 0, tweaks: [150]});
+assert.equal(posted.at(-1).values[0], 150, 'TRX tweak survives a machine switch');
+await processor.onMessage({type: 'tweak-set', index: 1, value: 10});
+await processor.onMessage({type: 'trigger'});
+assert.ok(block().every(Number.isFinite), 'shortest TRX-B2 decay stays valid');
+
 for (let kind = 0; kind < 16; kind++) {
     await processor.onMessage({type: 'kind', kind});
     for (let index = 0; index < 8; index++)

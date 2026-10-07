@@ -17,6 +17,7 @@ typedef struct {
     dd_noise noise;
     dd_onepole filter[8];
     dd_trx_family_kind kind;
+    dd_trx_algorithm algorithm;
     uint32_t age;
     uint32_t inc[6];
     int32_t metal_lp_coeff;
