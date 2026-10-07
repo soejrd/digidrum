@@ -15,13 +15,15 @@ typedef enum {
 typedef struct {
     dd_osc osc[6];
     dd_noise noise;
-    dd_onepole filter[8];
+    dd_onepole filter[4];
+    dd_onepole sub_hp; /* 50 Hz highpass on the hat source */
+    dd_eq_band hp_eq, lp_eq;
     dd_trx_family_kind kind;
     dd_trx_algorithm algorithm;
     uint32_t age;
     uint32_t inc[6];
-    int32_t metal_lp_coeff;
-    int32_t metal_hp_coeff;
+    int32_t eq_hp_gain_q8, eq_lp_gain_q8;
+    int32_t sub_hp_coeff; /* 50 Hz highpass on the hat source */
     int32_t metal_mix;
     int32_t metal_prev;
     int32_t metal_next;

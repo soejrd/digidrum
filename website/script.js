@@ -202,9 +202,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function showKnob(wrapper, value) {
         wrapper.dataset.value = String(value);
-        wrapper.querySelector('.param-value').textContent = String(value);
+        const index = wrappers.indexOf(wrapper);
+        const hatEq = [2, 3].includes(Number(machineSelect.value)) &&
+            (index === 2 || index === 3);
+        const hz = 4000 + Math.round(value * 5000 / 127);
+        wrapper.querySelector('.param-value').textContent = hatEq ?
+            `${(hz / 1000).toFixed(1)}k` : String(value);
         wrapper.querySelector('.ring-fill').style.width = `${value * 100 / 127}%`;
         wrapper.setAttribute('aria-valuenow', String(value));
+        if (hatEq) wrapper.setAttribute('aria-valuetext', `${hz} Hz`);
+        else wrapper.removeAttribute('aria-valuetext');
     }
 
     wrappers.forEach((wrapper, index) => {

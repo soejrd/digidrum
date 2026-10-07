@@ -59,13 +59,17 @@ static const efm_tweak_desc tweak_table[] = {
 
 #define TRX_TWEAK(field, low, high) {#field, offsetof(dd_trx_algorithm, field), low, high}
 static const efm_tweak_desc trx_tweak_table[] = {
-    TRX_TWEAK(pitch_percent, 25, 200),
+    TRX_TWEAK(pitch_percent, 1, 200),
     TRX_TWEAK(decay_percent, 10, 300),
     TRX_TWEAK(transient_percent, 10, 100),
     TRX_TWEAK(sweep_percent, 0, 200),
     TRX_TWEAK(noise_percent, 0, 200),
     TRX_TWEAK(body_percent, 0, 150),
-    TRX_TWEAK(metal_percent, 0, 200)
+    TRX_TWEAK(metal_percent, 0, 200),
+    TRX_TWEAK(hp_eq_q_x100, 80, 800),
+    TRX_TWEAK(hp_eq_boost_percent, 0, 500),
+    TRX_TWEAK(lp_eq_q_x100, 80, 800),
+    TRX_TWEAK(lp_eq_boost_percent, 0, 500)
 };
 #undef TRX_TWEAK
 #define TRX_TWEAK_COUNT (sizeof(trx_tweak_table) / sizeof(trx_tweak_table[0]))

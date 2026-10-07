@@ -26,8 +26,8 @@ This is a fresh era for these boxes. We can now explore new synthesis engines in
 | TRX-CP | ⬜⬜⬜⬜⬜ |   
 | TRX-RS | 🟩⬜⬜⬜⬜ |   
 | TRX-CB | 🟩⬜⬜⬜⬜ |   
-| TRX-CH | 🟩⬜⬜⬜⬜ |   
-| TRX-OH | 🟩⬜⬜⬜⬜ |   
+| TRX-CH | 🟩🟩🟩⬜⬜ |
+| TRX-OH | 🟩🟩🟩⬜⬜ |
 | TRX-CY | 🟩⬜⬜⬜⬜ |   
 | TRX-MA | 🟩⬜⬜⬜⬜ |   
 | TRX-CL | 🟩⬜⬜⬜⬜ |   

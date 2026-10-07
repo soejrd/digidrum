@@ -70,17 +70,34 @@ static int32_t metal(dd_trx_family_voice *v)
     return dd_clamp_q15(sum);
 }
 
-/* At half rate, square the 48 kHz one-pole memory coefficient. */
-static int32_t half_coeff(int32_t coeff)
+
+/* RBJ constant-peak bandpass, normalized to Q14. At 24 kHz the 512-entry
+ * sine table resolves center frequencies to about 47 Hz. Divisions run only
+ * when a control changes; the audio loop uses three multiplies per band. */
+static void hat_eq_coeffs(uint32_t center, uint32_t q_x100, uint32_t boost,
+                          dd_eq_band *band, int32_t *gain_q8)
 {
-    return dd_mul_q15(coeff, coeff);
+    uint32_t index, alpha, a0;
+    int32_t sine, cosine;
+    if (q_x100 < 80u) q_x100 = 80u;
+    if (q_x100 > 800u) q_x100 = 800u;
+    index = (center * DD_SINE_SIZE + 12000u) / 24000u;
+    sine = dd_sine_tab[index & (DD_SINE_SIZE - 1u)];
+    cosine = dd_sine_tab[(index + DD_SINE_SIZE / 4u) & (DD_SINE_SIZE - 1u)];
+    alpha = (uint32_t)sine * 50u / q_x100; /* sin(w) / (2Q), Q15 */
+    a0 = 32768u + alpha;
+    band->b0 = (int32_t)(alpha * 16384u / a0);
+    band->a1 = (-2 * cosine * 16384) / (int32_t)a0;
+    band->a2 = (int32_t)((32768u - alpha) * 16384u / a0);
+    if (boost > 500u) boost = 500u;
+    *gain_q8 = (int32_t)(boost * 256u / 100u);
 }
 
 void dd_trx_family_init(dd_trx_family_voice *v, dd_trx_family_kind kind)
 {
     uint32_t i;
     for (i = 0; i < 6u; ++i) dd_osc_init(&v->osc[i]);
-    for (i = 0; i < 8u; ++i) dd_onepole_init(&v->filter[i]);
+    for (i = 0; i < 4u; ++i) dd_onepole_init(&v->filter[i]);
     dd_noise_init(&v->noise, 0x731C92A5u + (uint32_t)kind);
     v->kind = kind;
     v->algorithm = dd_trx_default_algorithm;
@@ -95,7 +112,13 @@ void dd_trx_family_init(dd_trx_family_voice *v, dd_trx_family_kind kind)
     v->params_valid = 0;
     v->metal_phase = 0;
     v->metal_prev = v->metal_next = 0;
-    v->metal_lp_coeff = v->metal_hp_coeff = v->metal_mix = 0;
+    dd_eq_band_init(&v->hp_eq);
+    dd_eq_band_init(&v->lp_eq);
+    v->hp_eq.b0 = v->hp_eq.a1 = v->hp_eq.a2 = 0;
+    v->lp_eq.b0 = v->lp_eq.a1 = v->lp_eq.a2 = 0;
+    v->eq_hp_gain_q8 = v->eq_lp_gain_q8 = 0;
+    v->metal_mix = 0;
+    v->sub_hp_coeff = 0;
 }
 
 static void configure(dd_trx_family_voice *v, const dd_trx_params *p, int trigger)
@@ -119,16 +142,28 @@ static void configure(dd_trx_family_voice *v, const dd_trx_params *p, int trigge
         break;
     case DD_TRXF_CH:
     case DD_TRXF_OH:
-        v->env_step = decay_step((v->kind == DD_TRXF_CH ? 18u : 130u) + length *
+        /* GAP (control 0) is the decay; DEC (control 1) is the hold. */
+        v->env_step = decay_step((v->kind == DD_TRXF_CH ? 18u : 130u) + ctl(v, 0) *
                                  (v->kind == DD_TRXF_CH ? 4u : 18u));
-        v->aux_step = decay_step(8u + length);
-        /* Appendix B holds the amplitude before its linear decay. */
-        v->gap_at = (v->kind == DD_TRXF_CH ? ctl(v, 0) :
-                     ctl(v, 0) * 2u) * 48u;
-        v->metal_lp_coeff = half_coeff(22500 - (int32_t)ctl(v, 3) * 110);
-        v->metal_hp_coeff = half_coeff(26000 - (int32_t)ctl(v, 2) * 50);
+        v->aux_step = decay_step(8u + ctl(v, 0));
+        /* DEC drives a flat hold; cap at 75 for a usable ceiling. */
+        v->gap_at = (v->kind == DD_TRXF_CH ? length * 75u / 127u :
+                     length * 75u / 127u * 2u) * 48u;
+        /* MTAL only controls the mix, not the oscillator frequencies. */
+        /* Two independent EQ peaks at the 24 kHz internal rate. */
+        {
+            uint32_t hp_center = 4000u + ctl(v, 2) * 5000u / 127u;
+            uint32_t lp_center = 4000u + ctl(v, 3) * 5000u / 127u;
+            hat_eq_coeffs(hp_center, v->algorithm.hp_eq_q_x100,
+                          v->algorithm.hp_eq_boost_percent,
+                          &v->hp_eq, &v->eq_hp_gain_q8);
+            hat_eq_coeffs(lp_center, v->algorithm.lp_eq_q_x100,
+                          v->algorithm.lp_eq_boost_percent,
+                          &v->lp_eq, &v->eq_lp_gain_q8);
+        }
+        v->sub_hp_coeff = 32342; /* 50 Hz highpass at 24 kHz */
         v->metal_mix = (int32_t)ctl(v, 4);
-        metal_rates(v, ctl(v, 4) * 2u, 64u, 2u);
+        metal_rates(v, 0u, 64u, 2u);
         break;
     case DD_TRXF_CY:
         v->env_step = decay_step(180u + length * 25u);
@@ -175,8 +210,7 @@ static void configure(dd_trx_family_voice *v, const dd_trx_params *p, int trigge
 
 static int32_t hat_half_sample(dd_trx_family_voice *v)
 {
-    int32_t x, n;
-    uint32_t j;
+    int32_t x, n, hp_band, lp_band;
     v->age += 2u;
     if (v->age > v->gap_at)
         v->env = decay(v->env, v->env_step * 2u);
@@ -185,15 +219,13 @@ static int32_t hat_half_sample(dd_trx_family_voice *v)
         n = dd_clamp_q15(n * (int32_t)v->algorithm.noise_percent / 100);
     x = metal(v);
     x = (x * (64 + v->metal_mix) + n * (128 - v->metal_mix)) >> 8;
-    x -= v->filter[3].lp >> 4;
-    x += v->filter[7].hp >> 5;
     x = dd_clamp_q15(x);
-    for (j = 0; j < 4u; ++j)
-        x = dd_onepole_lp_fast(&v->filter[j], x, v->metal_lp_coeff);
-    for (j = 4u; j < 6u; ++j)
-        x = dd_clamp_q15(dd_onepole_hp_fast(&v->filter[j], x, 25665));
-    for (j = 6u; j < 8u; ++j)
-        x = dd_clamp_q15(dd_onepole_hp_fast(&v->filter[j], x, v->metal_hp_coeff));
+    /* Existing highpass first, then two independent parametric EQ boosts. */
+    x = dd_clamp_q15(dd_onepole_hp_fast(&v->sub_hp, x, v->sub_hp_coeff));
+    hp_band = dd_eq_band_run(&v->hp_eq, x);
+    lp_band = dd_eq_band_run(&v->lp_eq, x);
+    x = dd_clamp_q15(x + (hp_band * v->eq_hp_gain_q8 >> 8) +
+                      (lp_band * v->eq_lp_gain_q8 >> 8));
     return mul_env(x, v->env);
 }
 
@@ -282,7 +314,10 @@ void dd_trx_family_render(dd_trx_family_voice *v, const dd_trx_params *p,
         v->env = v->aux_env = v->snap_env = ENV_ONE;
         v->double_done = (v->kind != DD_TRXF_CL || ctl(v, 2) == 0u);
         for (i = 0; i < 6u; ++i) v->osc[i].phase = 0;
-        for (i = 0; i < 8u; ++i) dd_onepole_init(&v->filter[i]);
+        for (i = 0; i < 4u; ++i) dd_onepole_init(&v->filter[i]);
+        dd_onepole_init(&v->sub_hp);
+        dd_eq_band_init(&v->hp_eq);
+        dd_eq_band_init(&v->lp_eq);
         v->metal_prev = v->metal_next = 0;
         v->metal_phase = 0;
     }

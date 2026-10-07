@@ -37,6 +37,10 @@ typedef struct {
     uint32_t noise_percent;
     uint32_t body_percent;
     uint32_t metal_percent;
+    uint32_t hp_eq_q_x100;
+    uint32_t hp_eq_boost_percent;
+    uint32_t lp_eq_q_x100;
+    uint32_t lp_eq_boost_percent;
 } dd_trx_algorithm;
 
 extern const dd_trx_algorithm dd_trx_default_algorithm;

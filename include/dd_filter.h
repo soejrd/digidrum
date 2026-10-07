@@ -46,6 +46,30 @@ static inline int32_t dd_onepole_hp_fast(dd_onepole *f, int32_t input,
     return f->hp;
 }
 
+/* Constant-peak bandpass for a parametric EQ boost. Coefficients are Q14;
+ * input and state are Q15. The b1 term is zero, so one band needs three
+ * multiplies per sample. Configure coefficients outside the audio loop. */
+typedef struct {
+    int32_t b0, a1, a2;
+    int32_t x2, y1, y2;
+} dd_eq_band;
+
+static inline void dd_eq_band_init(dd_eq_band *f)
+{
+    f->x2 = f->y1 = f->y2 = 0;
+}
+
+static inline int32_t dd_eq_band_run(dd_eq_band *f, int32_t input)
+{
+    int32_t sum = f->b0 * (input - f->x2) -
+                  f->a1 * f->y1 - f->a2 * f->y2;
+    int32_t output = dd_clamp_q15(sum >> 14);
+    f->x2 = input;
+    f->y2 = f->y1;
+    f->y1 = output;
+    return output;
+}
+
 int32_t dd_onepole_lp_run(dd_onepole *f, int32_t input, int32_t coeff);
 
 #endif

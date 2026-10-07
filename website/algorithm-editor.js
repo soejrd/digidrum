@@ -36,8 +36,12 @@ const trxUsed = [
         'noise_percent', 'body_percent'],
     ['pitch_percent', 'decay_percent', 'transient_percent', 'sweep_percent',
         'noise_percent', 'body_percent'],
-    ['pitch_percent', 'decay_percent', 'noise_percent', 'body_percent', 'metal_percent'],
-    ['pitch_percent', 'decay_percent', 'noise_percent', 'body_percent', 'metal_percent'],
+    ['pitch_percent', 'decay_percent', 'noise_percent', 'body_percent',
+        'metal_percent', 'hp_eq_q_x100', 'hp_eq_boost_percent',
+        'lp_eq_q_x100', 'lp_eq_boost_percent'],
+    ['pitch_percent', 'decay_percent', 'noise_percent', 'body_percent',
+        'metal_percent', 'hp_eq_q_x100', 'hp_eq_boost_percent',
+        'lp_eq_q_x100', 'lp_eq_boost_percent'],
     ['pitch_percent', 'decay_percent', 'transient_percent', 'noise_percent',
         'body_percent', 'metal_percent'],
     ['pitch_percent', 'decay_percent', 'transient_percent', 'body_percent'],
@@ -50,6 +54,8 @@ const groups = [
     ['Pitch and sweep', /^(pitch_|sweep_)/],
     ['Decay and attack', /^(decay_|transient_)/],
     ['Source balance', /^(noise_|body_|metal_)/],
+    ['HPF EQ', /^hp_eq_/],
+    ['LPF EQ', /^lp_eq_/],
     ['Pitch', /^(c\d?_.*hz|m\d?_.*hz|rim_|cb_ratio|sweep_|ratio_|phase_|bd_mod_ratio)/],
     ['Envelopes', /^(amp_|mod_.*ms|ramp_.*ms|aux_|cb_aux_|clap_|bd_mod_attack)/],
     ['Modulation and mix', /^(depth_|fb_|noise_|snap_|bd_index)/],
@@ -66,6 +72,8 @@ function fieldLabel(kind, name) {
         if (name === 'body_percent') return kind === 0 ? 'body level %' : 'output level %';
         if (name === 'transient_percent') return kind === 0 ? 'tick level %' : 'transient length %';
         if (name === 'decay_percent') return 'decay time %';
+        if (name.endsWith('_eq_q_x100')) return 'Q × 100';
+        if (name.endsWith('_eq_boost_percent')) return 'boost %';
     }
     return name.replaceAll('_', ' ');
 }
@@ -92,7 +100,8 @@ export class AlgorithmEditor {
             const entries = descriptors.map((desc, index) => ({...desc, index}))
                 .filter(desc => relevant.has(desc.name) && groupName(desc.name) === title);
             if (!entries.length) continue;
-            const folder = this.pane.addFolder({title, expanded: title === 'Pitch' || title === 'Pitch and sweep'});
+            const folder = this.pane.addFolder({title, expanded: title === 'Pitch' ||
+                title === 'Pitch and sweep' || title === 'HPF EQ' || title === 'LPF EQ'});
             for (const desc of entries) {
                 folder.addBinding(this.state, desc.name, {
                     min: desc.min, max: desc.max, step: 1,

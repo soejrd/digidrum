@@ -53,7 +53,7 @@ assert.ok(hit.some(sample => Math.abs(sample) > 0.01));
 assert.ok(block().some(sample => sample !== 0)); // voice survives the block
 
 assert.equal(posted[0].tweakDescriptors[0].name, 'pitch_percent');
-assert.ok(posted[0].tweakValues.every(value => value === 100));
+assert.ok(posted[0].tweakValues.slice(0, 7).every(value => value === 100));
 await processor.onMessage({type: 'kind', kind: 0});
 await processor.onMessage({type: 'trigger'});
 const baseline = block();
@@ -68,6 +68,27 @@ assert.equal(posted.at(-1).values[0], 150, 'TRX tweak survives a machine switch'
 await processor.onMessage({type: 'tweak-set', index: 1, value: 10});
 await processor.onMessage({type: 'trigger'});
 assert.ok(block().every(Number.isFinite), 'shortest TRX-B2 decay stays valid');
+
+await processor.onMessage({type: 'kind', kind: 2});
+const hatFields = posted.at(-1).descriptors.map(desc => desc.name);
+const hatIndex = name => hatFields.indexOf(name);
+async function hatBlock(hpBoost, lpBoost, hpQ = 200, lpQ = 200) {
+    await processor.onMessage({type: 'kind', kind: 2});
+    for (let index = 0; index < 8; index++)
+        await processor.onMessage({type: 'control', index,
+            value: posted[0].defaults[2].controls[index]});
+    for (const [name, value] of [
+        ['hp_eq_boost_percent', hpBoost], ['lp_eq_boost_percent', lpBoost],
+        ['hp_eq_q_x100', hpQ], ['lp_eq_q_x100', lpQ]
+    ]) await processor.onMessage({type: 'tweak-set', index: hatIndex(name), value});
+    await processor.onMessage({type: 'trigger'});
+    return block();
+}
+const dryHat = await hatBlock(0, 0);
+assert.notDeepEqual(await hatBlock(200, 0), dryHat, 'HPF EQ boosts independently');
+assert.notDeepEqual(await hatBlock(0, 200), dryHat, 'LPF EQ boosts independently');
+assert.notDeepEqual(await hatBlock(200, 0, 800), await hatBlock(200, 0, 80),
+    'HPF Q changes its band');
 
 for (let kind = 0; kind < 16; kind++) {
     await processor.onMessage({type: 'kind', kind});

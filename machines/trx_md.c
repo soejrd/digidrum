@@ -21,7 +21,8 @@ const uint8_t dd_trx_defaults_u7[DD_TRX_MACHINE_COUNT][8] = {
 const uint8_t dd_trx_control_counts[DD_TRX_MACHINE_COUNT] =
     {8, 8, 5, 5, 6, 3, 8, 6};
 const dd_trx_algorithm dd_trx_default_algorithm =
-    {100u, 100u, 100u, 100u, 100u, 100u, 100u};
+    {100u, 100u, 100u, 100u, 100u, 100u, 100u,
+     200u, 100u, 200u, 100u};
 #include "../include/dd_fixed.h"
 #include "../include/dd_tables.h"
 
