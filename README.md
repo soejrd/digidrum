@@ -17,57 +17,57 @@ This is a fresh era for these boxes. We can now explore new synthesis engines in
 
 ## Machine progress
 
-| Voice | Progress | Status |
-| --- | --- | --- |
-| TRX-BD | ⬜⬜⬜⬜⬜ |   |
-| TRX-B2 | 🟩🟩🟩🟩🟨 |   |
-| TRX-SD | 🟨⬜⬜⬜⬜ |   |
-| TRX-XT | 🟨⬜⬜⬜⬜ |   |
-| TRX-CP | ⬜⬜⬜⬜⬜ |   |
-| TRX-RS | 🟨⬜⬜⬜⬜ |   |
-| TRX-CB | 🟨⬜⬜⬜⬜ |   |
-| TRX-CH | 🟨⬜⬜⬜⬜ |   |
-| TRX-OH | 🟨⬜⬜⬜⬜ |   |
-| TRX-CY | 🟨⬜⬜⬜⬜ |   |
-| TRX-MA | 🟨⬜⬜⬜⬜ |   |
-| TRX-CL | 🟨⬜⬜⬜⬜ |   |
-| TRX-XC | 🟨⬜⬜⬜⬜ |   |
-| EFM-BD | 🟩🟩🟩🟩🟨 |   |
-| EFM-SD | 🟨⬜⬜⬜⬜ |   |
-| EFM-XT | 🟨⬜⬜⬜⬜ |   |
-| EFM-CP | 🟨⬜⬜⬜⬜ |   |
-| EFM-RS | 🟨⬜⬜⬜⬜ |   |
-| EFM-CB | 🟨⬜⬜⬜⬜ |   |
-| EFM-HH | 🟨⬜⬜⬜⬜ |   |
-| EFM-CY | 🟨⬜⬜⬜⬜ |   |
-| E12-BD | ⬜⬜⬜⬜⬜ |    |
-| E12-SD | ⬜⬜⬜⬜⬜ |    |
-| E12-HT | ⬜⬜⬜⬜⬜ |    |
-| E12-LT | ⬜⬜⬜⬜⬜ |    |
-| E12-CP | ⬜⬜⬜⬜⬜ |    |
-| E12-RS | ⬜⬜⬜⬜⬜ |    |
-| E12-CB | ⬜⬜⬜⬜⬜ |    |
-| E12-CH | ⬜⬜⬜⬜⬜ |    |
-| E12-OH | ⬜⬜⬜⬜⬜ |    |
-| E12-RC | ⬜⬜⬜⬜⬜ |    |
-| E12-CC | ⬜⬜⬜⬜⬜ |    |
-| E12-BR | ⬜⬜⬜⬜⬜ |    |
-| E12-TA | ⬜⬜⬜⬜⬜ |    |
-| E12-TR | ⬜⬜⬜⬜⬜ |    |
-| E12-SH | ⬜⬜⬜⬜⬜ |    |
-| E12-BC | ⬜⬜⬜⬜⬜ |    |
-| PI-BD | ⬜⬜⬜⬜⬜ |    |
-| PI-SD | ⬜⬜⬜⬜⬜ |    |
-| PI-XT | ⬜⬜⬜⬜⬜ |    |
-| PI-RS | ⬜⬜⬜⬜⬜ |    |
-| PI-ML | ⬜⬜⬜⬜⬜ |    |
-| PI-MA | ⬜⬜⬜⬜⬜ |    |
-| PI-HH | ⬜⬜⬜⬜⬜ |    |
-| PI-RC | ⬜⬜⬜⬜⬜ |    |
-| PI-CC | ⬜⬜⬜⬜⬜ |    |
-| GND-SN | ⬜⬜⬜⬜⬜ |    |
-| GND-NS | ⬜⬜⬜⬜⬜ |    |
-| GND-IM | ⬜⬜⬜⬜⬜ |    |
+| Voice | Progress |
+| --- | --- |
+| TRX-BD | ⬜⬜⬜⬜⬜ |
+| TRX-B2 | 🟩🟩🟩🟩🟨 |  
+| TRX-SD | 🟨⬜⬜⬜⬜ |   
+| TRX-XT | 🟨⬜⬜⬜⬜ |   
+| TRX-CP | ⬜⬜⬜⬜⬜ |   
+| TRX-RS | 🟨⬜⬜⬜⬜ |   
+| TRX-CB | 🟨⬜⬜⬜⬜ |   
+| TRX-CH | 🟨⬜⬜⬜⬜ |   
+| TRX-OH | 🟨⬜⬜⬜⬜ |   
+| TRX-CY | 🟨⬜⬜⬜⬜ |   
+| TRX-MA | 🟨⬜⬜⬜⬜ |   
+| TRX-CL | 🟨⬜⬜⬜⬜ |   
+| TRX-XC | 🟨⬜⬜⬜⬜ |   
+| EFM-BD | 🟩🟩🟩🟩🟨 |   
+| EFM-SD | 🟨⬜⬜⬜⬜ |   
+| EFM-XT | 🟨⬜⬜⬜⬜ |   
+| EFM-CP | 🟨⬜⬜⬜⬜ |   
+| EFM-RS | 🟨⬜⬜⬜⬜ |   
+| EFM-CB | 🟨⬜⬜⬜⬜ |   
+| EFM-HH | 🟨⬜⬜⬜⬜ |   
+| EFM-CY | 🟨⬜⬜⬜⬜ |   
+| E12-BD | ⬜⬜⬜⬜⬜ |   
+| E12-SD | ⬜⬜⬜⬜⬜ |   
+| E12-HT | ⬜⬜⬜⬜⬜ |   
+| E12-LT | ⬜⬜⬜⬜⬜ |   
+| E12-CP | ⬜⬜⬜⬜⬜ |   
+| E12-RS | ⬜⬜⬜⬜⬜ |   
+| E12-CB | ⬜⬜⬜⬜⬜ |   
+| E12-CH | ⬜⬜⬜⬜⬜ |   
+| E12-OH | ⬜⬜⬜⬜⬜ | 
+| E12-RC | ⬜⬜⬜⬜⬜ |    
+| E12-CC | ⬜⬜⬜⬜⬜ |    
+| E12-BR | ⬜⬜⬜⬜⬜ |    
+| E12-TA | ⬜⬜⬜⬜⬜ |    
+| E12-TR | ⬜⬜⬜⬜⬜ |    
+| E12-SH | ⬜⬜⬜⬜⬜ |    
+| E12-BC | ⬜⬜⬜⬜⬜ |    
+| PI-BD | ⬜⬜⬜⬜⬜ |    
+| PI-SD | ⬜⬜⬜⬜⬜ |    
+| PI-XT | ⬜⬜⬜⬜⬜ |    
+| PI-RS | ⬜⬜⬜⬜⬜ |    
+| PI-ML | ⬜⬜⬜⬜⬜ |    
+| PI-MA | ⬜⬜⬜⬜⬜ |    
+| PI-HH | ⬜⬜⬜⬜⬜ |    
+| PI-RC | ⬜⬜⬜⬜⬜ |    
+| PI-CC | ⬜⬜⬜⬜⬜ |    
+| GND-SN | ⬜⬜⬜⬜⬜ |    
+| GND-NS | ⬜⬜⬜⬜⬜ |    
+| GND-IM | ⬜⬜⬜⬜⬜ |    
 
 ## Super alpha: expect things to break
 
