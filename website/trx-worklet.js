@@ -17,6 +17,18 @@ class TrxProcessor extends AudioWorkletProcessor {
         this.port.onmessage = event => this.onMessage(event.data);
     }
 
+    readCString(pointer) {
+        const bytes = new Uint8Array(this.wasm.memory.buffer);
+        let name = '';
+        while (pointer && bytes[pointer]) name += String.fromCharCode(bytes[pointer++]);
+        return name;
+    }
+
+    tweakValues() {
+        return Array.from({length: this.wasm.dd_web_efm_tweak_count()}, (_, index) =>
+            this.wasm.dd_web_efm_tweak_get(index));
+    }
+
     async onMessage(message) {
         try {
             if (message.type === 'wasm') {
@@ -28,20 +40,40 @@ class TrxProcessor extends AudioWorkletProcessor {
                     controls: Array.from({length: 8}, (_, index) => this.wasm.dd_web_default_control(kind, index)),
                     count: this.wasm.dd_web_control_count(kind)
                 }));
+                const tweakDescriptors = Array.from({length: this.wasm.dd_web_efm_tweak_count()}, (_, index) => ({
+                    name: this.readCString(this.wasm.dd_web_efm_tweak_name(index)),
+                    min: this.wasm.dd_web_efm_tweak_min(index),
+                    max: this.wasm.dd_web_efm_tweak_max(index)
+                }));
                 this.controls = [...defaults[this.kind].controls];
                 this.wasm.dd_web_init(this.kind);
                 this.controls.forEach((value, index) => this.wasm.dd_web_set_control(index, value));
                 this.wasm.dd_web_set_level(this.level);
                 const pointer = this.wasm.dd_web_render(0);
                 this.samples = new Int32Array(this.wasm.memory.buffer, pointer, this.capacity);
-                this.port.postMessage({type: 'ready', defaults});
+                this.port.postMessage({type: 'ready', kind: this.kind, defaults, tweakDescriptors,
+                    tweakValues: this.tweakValues()});
             } else if (message.type === 'kind') {
                 this.kind = message.kind;
                 if (this.wasm) {
                     this.wasm.dd_web_init(this.kind);
                     this.controls.forEach((value, index) => this.wasm.dd_web_set_control(index, value));
                     this.wasm.dd_web_set_level(this.level);
+                    if (this.kind >= 8 && Array.isArray(message.tweaks))
+                        message.tweaks.forEach((value, index) =>
+                            this.wasm.dd_web_efm_tweak_set(index, value));
+                    this.port.postMessage({type: 'tweak-values', kind: this.kind,
+                        values: this.tweakValues()});
                 }
+            } else if (message.type === 'tweak-get' && this.wasm) {
+                this.port.postMessage({type: 'tweak-value', kind: this.kind,
+                    index: message.index,
+                    value: this.wasm.dd_web_efm_tweak_get(message.index)});
+            } else if (message.type === 'tweak-set' && this.wasm) {
+                this.wasm.dd_web_efm_tweak_set(message.index, message.value);
+                this.port.postMessage({type: 'tweak-value', kind: this.kind,
+                    index: message.index,
+                    value: this.wasm.dd_web_efm_tweak_get(message.index)});
             } else if (message.type === 'control') {
                 if (message.index >= 0 && message.index < 8) {
                     this.controls[message.index] = message.value;

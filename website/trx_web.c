@@ -2,6 +2,7 @@
  * Thin browser bridge. Synthesis stays in the shared C machine sources.
  */
 #include <stdint.h>
+#include <stddef.h>
 #include "dd_trx_md.h"
 #include "dd_trx_family.h"
 #include "dd_efm.h"
@@ -15,6 +16,77 @@ static dd_trx_params params;
 static int32_t output[WEB_BLOCK];
 static int pending_trigger;
 static int current_kind;
+
+typedef struct {
+    const char *name;
+    uint32_t offset, min, max;
+} efm_tweak_desc;
+
+#define TWEAK(field, low, high) {#field, offsetof(dd_efm_tweaks, field), low, high}
+static const efm_tweak_desc tweak_table[] = {
+    TWEAK(c_min_hz, 0, 2000), TWEAK(c_hz_range, 0, 5000),
+    TWEAK(m_min_hz, 0, 3000), TWEAK(m_hz_range, 0, 5000),
+    TWEAK(c2_min_hz, 0, 2000), TWEAK(c2_hz_range, 0, 5000),
+    TWEAK(m2_offset_hz, 0, 5000), TWEAK(m2_hz_per_control, 0, 100),
+    TWEAK(rim_mod_ratio, 0, 10), TWEAK(rim_mod_offset, 0, 5000),
+    TWEAK(cb_ratio_percent, 0, 250), TWEAK(sweep_max_hz, 0, 4000),
+    TWEAK(bd_mod_ratio_min_q8, 0, 8192),
+    TWEAK(bd_mod_ratio_span_q8, 0, 8192),
+    TWEAK(bd_index_max_q8, 0, 2048),
+    TWEAK(bd_mod_attack_ms, 0, 200),
+    TWEAK(amp_min_ms, 1, 10000), TWEAK(amp_span_ms, 0, 10000),
+    TWEAK(mod_min_ms, 0, 10000), TWEAK(mod_span_ms, 0, 10000),
+    TWEAK(mod_fixed_ms, 0, 10000),
+    TWEAK(ramp_min_ms, 0, 1000), TWEAK(ramp_span_ms, 0, 1000),
+    TWEAK(aux_min_ms, 0, 10000), TWEAK(aux_span_ms, 0, 10000),
+    TWEAK(cb_aux_min_ms, 0, 1000), TWEAK(cb_aux_divisor, 0, 127),
+    TWEAK(depth_mult, 0, 500), TWEAK(fb_depth_mult, 0, 100),
+    TWEAK(fb_depth_fix, 0, 10000),
+    TWEAK(noise_gain_mult, 0, 258), TWEAK(snap_gain_mult, 0, 258),
+    TWEAK(hp_min_hz, 0, 5000), TWEAK(hp_hz_range, 0, 10000),
+    TWEAK(hp_fixed_hz, 0, 5000), TWEAK(hp_frac_num, 0, 10),
+    TWEAK(hp_frac_den, 0, 10),
+    TWEAK(clap_max_count, 0, 10), TWEAK(clap_period, 0, 5000),
+    TWEAK(trem_depth_mult, 0, 258),
+    TWEAK(trem_freq_min_hz, 0, 1000), TWEAK(trem_freq_range, 0, 5000),
+    TWEAK(ratio_0, 0, 5000), TWEAK(ratio_1, 0, 5000),
+    TWEAK(ratio_2, 0, 5000), TWEAK(ratio_3, 0, 5000),
+    TWEAK(phase_offset_q2, 0, 3)
+};
+#undef TWEAK
+
+#define TWEAK_COUNT (sizeof(tweak_table) / sizeof(tweak_table[0]))
+
+uint32_t dd_web_efm_tweak_count(void) { return TWEAK_COUNT; }
+uint32_t dd_web_efm_tweak_name(uint32_t index)
+{
+    return index < TWEAK_COUNT ? (uint32_t)(uintptr_t)tweak_table[index].name : 0u;
+}
+uint32_t dd_web_efm_tweak_min(uint32_t index)
+{
+    return index < TWEAK_COUNT ? tweak_table[index].min : 0u;
+}
+uint32_t dd_web_efm_tweak_max(uint32_t index)
+{
+    return index < TWEAK_COUNT ? tweak_table[index].max : 0u;
+}
+uint32_t dd_web_efm_tweak_get(uint32_t index)
+{
+    const uint8_t *base = (const uint8_t *)&efm_voice.tweaks;
+    if (current_kind < (int)DD_TRX_MACHINE_COUNT || index >= TWEAK_COUNT) return 0u;
+    return *(const uint32_t *)(const void *)(base + tweak_table[index].offset);
+}
+void dd_web_efm_tweak_set(uint32_t index, uint32_t value)
+{
+    uint8_t *base = (uint8_t *)&efm_voice.tweaks;
+    const efm_tweak_desc *desc;
+    if (current_kind < (int)DD_TRX_MACHINE_COUNT || index >= TWEAK_COUNT) return;
+    desc = &tweak_table[index];
+    if (value < desc->min) value = desc->min;
+    if (value > desc->max) value = desc->max;
+    *(uint32_t *)(void *)(base + desc->offset) = value;
+    efm_voice.cache.valid = 0;
+}
 
 void dd_web_init(int kind)
 {

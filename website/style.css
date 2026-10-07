@@ -198,6 +198,37 @@ input[type="range"] {
   background: #fff0be;
 }
 
+.algorithm-editor {
+  margin-top: 24px;
+  padding: 14px 16px 16px;
+  border: 1px solid var(--line);
+  background: #131713;
+}
+
+.algorithm-editor[hidden] { display: none; }
+.algorithm-editor summary {
+  color: var(--amber-soft);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+.algorithm-editor summary span {
+  margin-left: 8px;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+}
+.algorithm-editor p {
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.5;
+}
+#algorithm-pane { max-width: 100%; }
+#algorithm-pane .tp-dfwv { width: 100%; }
 .sequencer {
   margin-top: 24px;
   padding: 16px;

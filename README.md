@@ -32,7 +32,7 @@ This is a fresh era for these boxes. We can now explore new synthesis engines in
 | TRX-MA | 🟨⬜⬜⬜⬜ | Init |
 | TRX-CL | 🟨⬜⬜⬜⬜ | Init |
 | TRX-XC | 🟨⬜⬜⬜⬜ | Init |
-| EFM-BD | 🟨⬜⬜⬜⬜ | Init |
+| EFM-BD | 🟩🟩🟩🟩🟨 | ~90% |
 | EFM-SD | 🟨⬜⬜⬜⬜ | Init |
 | EFM-XT | 🟨⬜⬜⬜⬜ | Init |
 | EFM-CP | 🟨⬜⬜⬜⬜ | Init |

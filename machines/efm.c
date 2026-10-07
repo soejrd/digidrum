@@ -21,6 +21,78 @@ const uint8_t dd_efm_defaults_u7[DD_EFM_MACHINE_COUNT][8] = {
 const uint8_t dd_efm_control_counts[DD_EFM_MACHINE_COUNT] =
     {8, 8, 8, 8, 8, 7, 8, 7};
 
+const dd_efm_tweaks dd_efm_default_tweaks[DD_EFM_MACHINE_COUNT] = {
+    [DD_EFM_BD] = {
+        .c_min_hz = 12, .c_hz_range = 390,
+        .sweep_max_hz = 2400, .ramp_min_ms = 4, .ramp_span_ms = 500,
+        .amp_min_ms = 12, .amp_span_ms = 1800,
+        .mod_min_ms = 5, .mod_span_ms = 1200,
+        .bd_mod_ratio_min_q8 = 20, .bd_mod_ratio_span_q8 = 2400,
+        .bd_index_max_q8 = 2048, .bd_mod_attack_ms = 18,
+        .fb_depth_mult = 75, .phase_offset_q2 = 2
+    },
+    [DD_EFM_SD] = {
+        .c_min_hz = 90, .c_hz_range = 350, .m_min_hz = 300, .m_hz_range = 2800,
+        .aux_min_ms = 5, .aux_span_ms = 1100,
+        .amp_min_ms = 12, .amp_span_ms = 1800,
+        .mod_min_ms = 5, .mod_span_ms = 1200,
+        .depth_mult = 95, .fb_depth_fix = 1900, .noise_gain_mult = 210,
+        .hp_min_hz = 30, .hp_hz_range = 2500
+    },
+    [DD_EFM_XT] = {
+        .c_min_hz = 70, .c_hz_range = 430, .m_min_hz = 70, .m_hz_range = 2400,
+        .sweep_max_hz = 450, .ramp_min_ms = 4, .ramp_span_ms = 500,
+        .amp_min_ms = 12, .amp_span_ms = 1800,
+        .mod_min_ms = 5, .mod_span_ms = 1200,
+        .depth_mult = 105, .fb_depth_fix = 2800, .snap_gain_mult = 200,
+        .hp_frac_num = 1, .hp_frac_den = 3
+    },
+    [DD_EFM_CP] = {
+        .c_min_hz = 100, .c_hz_range = 1100, .m_min_hz = 100, .m_hz_range = 2900,
+        .clap_max_count = 5, .clap_period = 480,
+        .aux_min_ms = 3, .aux_span_ms = 50,
+        .amp_min_ms = 12, .amp_span_ms = 1800,
+        .mod_min_ms = 5, .mod_span_ms = 1200,
+        .depth_mult = 120, .fb_depth_fix = 4800,
+        .hp_min_hz = 80, .hp_hz_range = 3000
+    },
+    [DD_EFM_RS] = {
+        .c_min_hz = 180, .c_hz_range = 920,
+        .rim_mod_ratio = 2, .rim_mod_offset = 200,
+        .c2_min_hz = 80, .c2_hz_range = 360,
+        .m2_offset_hz = 850, .m2_hz_per_control = 10,
+        .aux_min_ms = 10, .aux_span_ms = 850,
+        .amp_min_ms = 12, .amp_span_ms = 1800, .mod_fixed_ms = 65,
+        .depth_mult = 110, .fb_depth_fix = 2200,
+        .noise_gain_mult = 258, .snap_gain_mult = 110,
+        .hp_min_hz = 50, .hp_hz_range = 2600
+    },
+    [DD_EFM_CB] = {
+        .c_min_hz = 190, .c_hz_range = 930, .m_min_hz = 250, .m_hz_range = 3000,
+        .cb_ratio_percent = 148, .cb_aux_min_ms = 8, .cb_aux_divisor = 7,
+        .amp_min_ms = 12, .amp_span_ms = 1800,
+        .mod_min_ms = 5, .mod_span_ms = 1200,
+        .depth_mult = 105, .fb_depth_mult = 55, .snap_gain_mult = 252
+    },
+    [DD_EFM_HH] = {
+        .c_min_hz = 150, .c_hz_range = 700, .m_min_hz = 220, .m_hz_range = 2200,
+        .ratio_0 = 1000, .ratio_1 = 1411, .ratio_2 = 1800, .ratio_3 = 2700,
+        .amp_min_ms = 12, .amp_span_ms = 1100,
+        .mod_min_ms = 5, .mod_span_ms = 1200,
+        .depth_mult = 100, .fb_depth_mult = 50,
+        .trem_depth_mult = 257, .trem_freq_min_hz = 2, .trem_freq_range = 68,
+        .hp_fixed_hz = 450
+    },
+    [DD_EFM_CY] = {
+        .c_min_hz = 150, .c_hz_range = 700, .m_min_hz = 220, .m_hz_range = 2200,
+        .ratio_0 = 1000, .ratio_1 = 1411, .ratio_2 = 1800, .ratio_3 = 2700,
+        .amp_min_ms = 80, .amp_span_ms = 3900,
+        .mod_min_ms = 5, .mod_span_ms = 1200,
+        .depth_mult = 100, .fb_depth_mult = 50,
+        .hp_min_hz = 80, .hp_hz_range = 3300
+    }
+};
+
 static uint8_t u7(uint16_t q15)
 {
     return (uint8_t)(((uint32_t)q15 * 127u + 16383u) / 32767u);
@@ -48,6 +120,38 @@ static uint32_t time_ms(uint8_t control, uint32_t min_ms, uint32_t span_ms)
     return min_ms + (c * c * span_ms) / (127u * 127u);
 }
 
+/* Listening matches supplied for Gearmulator knob -> old C knob position.
+ * Piecewise segments preserve the measured anchors without assuming a
+ * global power curve that misses the middle of the travel. */
+static uint8_t bd_remap(uint8_t control, const uint8_t *input,
+                        const uint8_t *output, uint32_t count)
+{
+    uint32_t i;
+    for (i = 1; i < count; ++i) {
+        if (control <= input[i]) {
+            uint32_t width = input[i] - input[i - 1u];
+            uint32_t rise = output[i] - output[i - 1u];
+            return (uint8_t)(output[i - 1u] +
+                ((uint32_t)(control - input[i - 1u]) * rise + width / 2u) / width);
+        }
+    }
+    return output[count - 1u];
+}
+
+static uint8_t bd_decay_control(uint8_t control)
+{
+    static const uint8_t gearmulator[] = {0, 32, 64, 96, 127};
+    static const uint8_t old_c[] = {0, 10, 25, 50, 127};
+    return bd_remap(control, gearmulator, old_c, 5u);
+}
+
+static uint8_t bd_ramp_decay_control(uint8_t control)
+{
+    static const uint8_t gearmulator[] = {0, 40, 72, 93, 127};
+    static const uint8_t old_c[] = {0, 22, 50, 88, 127};
+    return bd_remap(control, gearmulator, old_c, 5u);
+}
+
 static int32_t highpass_coeff(uint32_t hz)
 {
     return (int32_t)(1572816000u / (48000u + 6u * hz));
@@ -63,6 +167,7 @@ static void set_pair(dd_efm_voice *v, uint32_t pair, uint32_t car_hz,
 static void update(dd_efm_voice *v, const dd_trx_params *p)
 {
     uint32_t i, pitch, mf, hp = 0;
+    const dd_efm_tweaks *t = &v->tweaks;
     struct dd_params cache_params;
     uint16_t changed;
     for (i = 0; i < 7u; ++i) cache_params.p[i] = p->control[i];
@@ -75,107 +180,120 @@ static void update(dd_efm_voice *v, const dd_trx_params *p)
     v->noise_gain = 0;
     v->snap_gain = 0;
     v->sweep_inc = 0;
+    v->depth = 0;
     v->fb_depth = 0;
     v->trem_depth = 0;
     switch (v->kind) {
     case DD_EFM_BD:
-        set_pair(v, 0, 25u + pitch * 95u / 127u,
-                 40u + v->control[5] * 1600u / 127u);
-        v->sweep_inc = (int32_t)hz_inc(v->control[2] * 600u / 127u);
-        dd_decay_env_set_coeff(&v->ramp, env_coeff(time_ms(v->control[3], 4, 500)));
-        v->depth = v->control[4] * 105;
-        v->fb_depth = v->control[7] * 40;
+        v->bd_base_hz = t->c_min_hz + pitch * t->c_hz_range / 127u;
+        v->bd_ratio_q8 = t->bd_mod_ratio_min_q8 +
+            (uint32_t)v->control[5] * v->control[5] *
+            t->bd_mod_ratio_span_q8 / (127u * 127u);
+        v->bd_index_q8 = v->control[4] * t->bd_index_max_q8 / 127u;
+        v->bd_mod_attack_samples = t->bd_mod_attack_ms * 48u;
+        v->bd_mod_attack_step_q22 = v->bd_mod_attack_samples
+            ? (32767u << 7) / v->bd_mod_attack_samples : 0u;
+        v->sweep_inc = (int32_t)(v->control[2] * t->sweep_max_hz / 127u);
+        dd_decay_env_set_coeff(&v->ramp, env_coeff(time_ms(
+            bd_ramp_decay_control(v->control[3]), t->ramp_min_ms, t->ramp_span_ms)));
+        v->fb_depth = v->control[7] * t->fb_depth_mult;
         break;
     case DD_EFM_SD:
-        set_pair(v, 0, 90u + pitch * 350u / 127u,
-                 300u + v->control[5] * 2800u / 127u);
-        v->noise_gain = v->control[2] * 210u;
-        dd_decay_env_set_coeff(&v->aux, env_coeff(time_ms(v->control[3], 5, 1100)));
-        v->depth = v->control[4] * 95;
-        v->fb_depth = 1900; /* fixed noisy modulator, per EFM paper */
-        hp = 30u + v->control[7] * 2500u / 127u;
+        set_pair(v, 0, t->c_min_hz + pitch * t->c_hz_range / 127u,
+                 t->m_min_hz + v->control[5] * t->m_hz_range / 127u);
+        v->noise_gain = v->control[2] * t->noise_gain_mult;
+        dd_decay_env_set_coeff(&v->aux, env_coeff(time_ms(v->control[3], t->aux_min_ms, t->aux_span_ms)));
+        v->depth = v->control[4] * t->depth_mult;
+        v->fb_depth = t->fb_depth_fix;
+        hp = t->hp_min_hz + v->control[7] * t->hp_hz_range / 127u;
         break;
     case DD_EFM_XT:
-        pitch = 70u + pitch * 430u / 127u;
-        set_pair(v, 0, pitch, 70u + v->control[5] * 2400u / 127u);
-        v->sweep_inc = (int32_t)hz_inc(v->control[2] * 450u / 127u);
-        dd_decay_env_set_coeff(&v->ramp, env_coeff(time_ms(v->control[3], 4, 500)));
-        v->depth = v->control[4] * 105;
-        v->fb_depth = 2800;
-        v->snap_gain = v->control[7] * 200;
-        hp = pitch / 3u;
+        pitch = t->c_min_hz + pitch * t->c_hz_range / 127u;
+        set_pair(v, 0, pitch, t->m_min_hz + v->control[5] * t->m_hz_range / 127u);
+        v->sweep_inc = (int32_t)hz_inc(v->control[2] * t->sweep_max_hz / 127u);
+        dd_decay_env_set_coeff(&v->ramp, env_coeff(time_ms(v->control[3], t->ramp_min_ms, t->ramp_span_ms)));
+        v->depth = v->control[4] * t->depth_mult;
+        v->fb_depth = t->fb_depth_fix;
+        v->snap_gain = v->control[7] * t->snap_gain_mult;
+        hp = pitch * t->hp_frac_num / (t->hp_frac_den ? t->hp_frac_den : 1u);
         break;
     case DD_EFM_CP:
-        set_pair(v, 0, 100u + pitch * 1100u / 127u,
-                 100u + v->control[5] * 2900u / 127u);
-        v->clap_count = 1u + v->control[2] * 5u / 127u;
-        v->clap_period = 480u; /* 10 ms between preclaps */
-        dd_decay_env_set_coeff(&v->aux, env_coeff(time_ms(v->control[3], 3, 50)));
-        v->depth = v->control[4] * 120;
-        v->fb_depth = 4800;
-        hp = 80u + v->control[7] * 3000u / 127u;
+        set_pair(v, 0, t->c_min_hz + pitch * t->c_hz_range / 127u,
+                 t->m_min_hz + v->control[5] * t->m_hz_range / 127u);
+        v->clap_count = 1u + v->control[2] * t->clap_max_count / 127u;
+        v->clap_period = t->clap_period;
+        dd_decay_env_set_coeff(&v->aux, env_coeff(time_ms(v->control[3], t->aux_min_ms, t->aux_span_ms)));
+        v->depth = v->control[4] * t->depth_mult;
+        v->fb_depth = t->fb_depth_fix;
+        hp = t->hp_min_hz + v->control[7] * t->hp_hz_range / 127u;
         break;
     case DD_EFM_RS:
-        pitch = 180u + pitch * 920u / 127u;
-        set_pair(v, 0, pitch, pitch * 2u + 200u);
-        set_pair(v, 1, 80u + v->control[5] * 360u / 127u,
-                 850u + v->control[5] * 10u);
-        v->depth = v->control[2] * 110;
-        v->noise_gain = v->control[4] * 258u; /* snare body mix */
-        v->snap_gain = v->control[7] * 110; /* snare modulation */
-        dd_decay_env_set_coeff(&v->aux, env_coeff(time_ms(v->control[6], 10, 850)));
-        v->fb_depth = 2200;
-        hp = 50u + v->control[3] * 2600u / 127u;
+        pitch = t->c_min_hz + pitch * t->c_hz_range / 127u;
+        set_pair(v, 0, pitch, pitch * t->rim_mod_ratio + t->rim_mod_offset);
+        set_pair(v, 1, t->c2_min_hz + v->control[5] * t->c2_hz_range / 127u,
+                 t->m2_offset_hz + v->control[5] * t->m2_hz_per_control);
+        v->depth = v->control[2] * t->depth_mult;
+        v->noise_gain = v->control[4] * t->noise_gain_mult;
+        v->snap_gain = v->control[7] * t->snap_gain_mult;
+        dd_decay_env_set_coeff(&v->aux, env_coeff(time_ms(v->control[6], t->aux_min_ms, t->aux_span_ms)));
+        v->fb_depth = t->fb_depth_fix;
+        hp = t->hp_min_hz + v->control[3] * t->hp_hz_range / 127u;
         break;
     case DD_EFM_CB:
-        pitch = 190u + pitch * 930u / 127u;
-        mf = 250u + v->control[5] * 3000u / 127u;
+        pitch = t->c_min_hz + pitch * t->c_hz_range / 127u;
+        mf = t->m_min_hz + v->control[5] * t->m_hz_range / 127u;
         set_pair(v, 0, pitch, mf);
-        set_pair(v, 1, pitch * 148u / 100u, mf * 148u / 100u);
-        v->snap_gain = v->control[2] * 252u;
-        v->fb_depth = v->control[3] * 55;
-        v->depth = v->control[4] * 105;
-        dd_decay_env_set_coeff(&v->aux, env_coeff(8u + v->control[1] / 7u));
+        set_pair(v, 1, pitch * t->cb_ratio_percent / 100u,
+                 mf * t->cb_ratio_percent / 100u);
+        v->snap_gain = v->control[2] * t->snap_gain_mult;
+        v->fb_depth = v->control[3] * t->fb_depth_mult;
+        v->depth = v->control[4] * t->depth_mult;
+        dd_decay_env_set_coeff(&v->aux, env_coeff(t->cb_aux_min_ms + v->control[1] /
+                                               (t->cb_aux_divisor ? t->cb_aux_divisor : 1u)));
         break;
     case DD_EFM_HH:
     case DD_EFM_CY: {
-        static const uint16_t ratio[4] = {1000, 1411, 1800, 2700};
-        uint32_t base = 150u + pitch * 700u / 127u;
-        mf = 220u + v->control[5] * 2200u / 127u;
+        const uint32_t ratio[4] = {t->ratio_0, t->ratio_1, t->ratio_2, t->ratio_3};
+        uint32_t base = t->c_min_hz + pitch * t->c_hz_range / 127u;
+        mf = t->m_min_hz + v->control[5] * t->m_hz_range / 127u;
         for (i = 0; i < 4u; ++i)
             set_pair(v, i, base * ratio[i] / 1000u,
                      mf * ratio[i] / 1000u);
-        v->depth = v->control[4] * 100;
-        v->fb_depth = v->control[v->kind == DD_EFM_HH ? 7 : 2] * 50;
+        v->depth = v->control[4] * t->depth_mult;
+        v->fb_depth = v->control[v->kind == DD_EFM_HH ? 7 : 2] * t->fb_depth_mult;
         if (v->kind == DD_EFM_HH) {
-            v->trem_depth = v->control[2] * 257u;
-            v->trem_inc = (int32_t)hz_inc(2u + v->control[3] * 68u / 127u);
-            hp = 450u; /* fixed bright hi-hat */
+            v->trem_depth = v->control[2] * t->trem_depth_mult;
+            v->trem_inc = (int32_t)hz_inc(t->trem_freq_min_hz +
+                                         v->control[3] * t->trem_freq_range / 127u);
+            hp = t->hp_fixed_hz;
         } else {
-            hp = 80u + v->control[3] * 3300u / 127u;
+            hp = t->hp_min_hz + v->control[3] * t->hp_hz_range / 127u;
         }
         break;
     }
     }
-    if (v->kind == DD_EFM_HH)
-        dd_decay_env_set_coeff(&v->amp, env_coeff(time_ms(v->control[1], 12, 1100)));
-    else if (v->kind == DD_EFM_CY)
-        dd_decay_env_set_coeff(&v->amp, env_coeff(time_ms(v->control[1], 80, 3900)));
+    dd_decay_env_set_coeff(&v->amp, env_coeff(time_ms(
+        v->kind == DD_EFM_BD ? bd_decay_control(v->control[1]) : v->control[1],
+        t->amp_min_ms, t->amp_span_ms)));
+    if (t->mod_fixed_ms)
+        dd_decay_env_set_coeff(&v->mod, env_coeff(t->mod_fixed_ms));
     else
-        dd_decay_env_set_coeff(&v->amp, env_coeff(time_ms(v->control[1], 12, 1800)));
-    if (v->kind == DD_EFM_CB)
-        dd_decay_env_set_coeff(&v->mod, env_coeff(time_ms(v->control[6], 5, 1200)));
-    else if (v->kind == DD_EFM_RS)
-        dd_decay_env_set_coeff(&v->mod, env_coeff(65));
-    else
-        dd_decay_env_set_coeff(&v->mod, env_coeff(time_ms(v->control[6], 5, 1200)));
+        dd_decay_env_set_coeff(&v->mod, env_coeff(time_ms(
+            v->kind == DD_EFM_BD ? bd_decay_control(v->control[6]) : v->control[6],
+            t->mod_min_ms, t->mod_span_ms)));
     v->hp_coeff = highpass_coeff(hp);
 }
 
 void dd_efm_init(dd_efm_voice *v, dd_efm_kind kind)
 {
     uint32_t i;
+    const unsigned char *defaults =
+        (const unsigned char *)&dd_efm_default_tweaks[kind];
+    volatile unsigned char *tweaks = (volatile unsigned char *)&v->tweaks;
     v->kind = kind;
+    /* A struct assignment emits a libc memcpy on ColdFire; copy once at
+     * voice initialization without adding a runtime import. */
+    for (i = 0; i < sizeof(v->tweaks); ++i) tweaks[i] = defaults[i];
     for (i = 0; i < 4u; ++i) {
         dd_osc_init(&v->carrier[i]);
         dd_osc_init(&v->modulator[i]);
@@ -192,6 +310,8 @@ void dd_efm_init(dd_efm_voice *v, dd_efm_kind kind)
     dd_param_cache_init(&v->cache);
     v->age = v->clap_time = v->clap_period = 0;
     v->clap_count = v->clap_stage = v->active = 0;
+    v->bd_mod_attack_samples = v->bd_mod_attack_step_q22 = 0;
+    v->bd_mod_decay_started = 0;
     v->level = 32767;
 }
 
@@ -218,6 +338,32 @@ static int32_t pair(dd_efm_voice *v, uint32_t i, int32_t depth,
     return c;
 }
 
+/* Figure 4.1 BD path: f(t) = fb(1 + Af Ef), fm(t) = f(t) * ratio,
+ * fc(t) = f(t) * (1 + I Em modulator). Keep the frequency math in Hz and
+ * Q8 so the sample loop needs only 32-bit multiplies on ColdFire. */
+static int32_t bd_sample(dd_efm_voice *v, int32_t mod_env)
+{
+    int32_t base_hz = (int32_t)v->bd_base_hz +
+        (v->sweep_inc * v->ramp.value >> 15);
+    uint32_t mod_hz = (uint32_t)base_hz * v->bd_ratio_q8 >> 8;
+    uint32_t mod_phase;
+    int32_t mod_wave, excursion_hz, mod_wave_q8, carrier_hz;
+
+    v->modulator[0].phase += hz_inc(mod_hz);
+    mod_phase = v->modulator[0].phase +
+        ((uint32_t)(v->feedback[0] * v->fb_depth) << 3);
+    mod_wave = dd_sine_tab[mod_phase >> (32u - DD_SINE_SIZE_LOG2)];
+    v->feedback[0] = mod_wave;
+
+    excursion_hz = (base_hz * (int32_t)v->bd_index_q8) >> 8;
+    mod_wave_q8 = dd_mul_q15(mod_wave, mod_env) >> 7;
+    carrier_hz = base_hz + ((excursion_hz * mod_wave_q8) >> 8);
+    if (carrier_hz > 11000) carrier_hz = 11000;
+    if (carrier_hz < -11000) carrier_hz = -11000;
+    v->carrier[0].phase += (uint32_t)(carrier_hz * 89478);
+    return dd_sine_tab[v->carrier[0].phase >> (32u - DD_SINE_SIZE_LOG2)];
+}
+
 void dd_efm_render(dd_efm_voice *v, const dd_trx_params *p,
                    int trigger, int32_t *out, uint32_t size)
 {
@@ -229,11 +375,17 @@ void dd_efm_render(dd_efm_voice *v, const dd_trx_params *p,
         v->active = 1;
         dd_decay_env_trigger(&v->amp);
         dd_decay_env_trigger(&v->mod);
+        v->bd_mod_decay_started = v->bd_mod_attack_samples == 0u;
+        if (v->kind == DD_EFM_BD && v->bd_mod_attack_samples) {
+            v->mod.value = 0;
+            v->mod.active = 0;
+        }
         dd_decay_env_trigger(&v->ramp);
         dd_decay_env_trigger(&v->aux);
         for (i = 0; i < 4u; ++i) {
-            v->carrier[i].phase = v->kind == DD_EFM_XT
-                ? (uint32_t)v->control[7] * 0x40000000u / 127u : 0x40000000u;
+            v->carrier[i].phase = (v->kind == DD_EFM_XT
+                ? (uint32_t)v->control[7] * 0x40000000u / 127u : 0x40000000u)
+                + v->tweaks.phase_offset_q2 * 0x40000000u;
             v->modulator[i].phase = 0;
             v->feedback[i] = 0;
         }
@@ -246,6 +398,11 @@ void dd_efm_render(dd_efm_voice *v, const dd_trx_params *p,
         if (!v->active) { out[n] = 0; continue; }
         if ((v->age & 7u) == 0u) {
             dd_decay_env_step(&v->amp);
+            if (v->kind == DD_EFM_BD &&
+                v->age >= v->bd_mod_attack_samples && !v->bd_mod_decay_started) {
+                dd_decay_env_trigger(&v->mod);
+                v->bd_mod_decay_started = 1;
+            }
             dd_decay_env_step(&v->mod);
             dd_decay_env_step(&v->ramp);
             dd_decay_env_step(&v->aux);
@@ -255,11 +412,15 @@ void dd_efm_render(dd_efm_voice *v, const dd_trx_params *p,
         if (!v->active) { out[n] = 0; continue; }
         a = v->amp.value;
         m = v->mod.value;
+        if (v->kind == DD_EFM_BD && v->age < v->bd_mod_attack_samples)
+            m = (int32_t)((v->age * v->bd_mod_attack_step_q22) >> 7);
         depth = dd_mul_q15(v->depth, m);
-        if (v->kind == DD_EFM_BD || v->kind == DD_EFM_XT)
+        if (v->kind == DD_EFM_XT)
             extra = (v->sweep_inc >> 15) * v->ramp.value;
         switch (v->kind) {
         case DD_EFM_BD:
+            x = bd_sample(v, m);
+            break;
         case DD_EFM_XT:
             x = pair(v, 0, depth, (uint32_t)extra);
             if (v->kind == DD_EFM_XT && v->age < 12u)

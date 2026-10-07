@@ -2,6 +2,10 @@
 
 The hosted test interface is available at <https://soejrd.github.io/digidrum/>. GitHub Pages publishes the committed `website/` files when they change on `main`. Audio starts after clicking **Trigger** or **Play**.
 
+The page opens on EFM-BD with **Algorithm editor** expanded. Select another EFM machine to change its synthesis constants while listening. The editor groups the constants used by that machine; the eight front-panel controls remain above it. Algorithm edits last for the current browser session; to make a change permanent, edit the C defaults and rebuild. The editor loads Tweakpane 4.0.5 from jsDelivr when opened, so that part needs network access.
+
+EFM-BD follows the Figure 4.1 frequency path in `Resources/elektron-fm.md`: a decaying base frequency drives both the modulator (through the MFRQ ratio) and the carrier; the feedback modulator changes the carrier's instantaneous frequency, scaled by MOD and its envelope. DEC applies the final amplitude envelope. The ratio and maximum FM index are exposed as Q8 algorithm constants (256 means 1.0). The current BD defaults use the first Gearmulator listening values: carrier 12–402 Hz, sweep up to 2400 Hz, ratio 20–2420 in Q8, FM index up to 2048 in Q8, feedback multiplier 75, phase offset 2 quarters, and an 18 ms linear modulator attack before its decay. MFRQ uses a quadratic control mapping for finer low ratios. DEC and MDEC use the measured DEC anchors, and RDEC uses its separate measured anchors; RDEC duration has not been shortened. Table lookup and eight-sample decay updates remain fixed-point approximations for the target DSP.
+
 To run it locally instead, from the `digidrum` root:
 
 ```sh

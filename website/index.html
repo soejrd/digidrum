@@ -12,7 +12,7 @@
         <div class="controls">
             <label for="machine-select">Machine:</label>
             <select id="machine-select">
-                <option value="0" selected>TRX-B2</option>
+                <option value="0">TRX-B2</option>
                 <option value="1">TRX-SD</option>
                 <option value="2">TRX-CH</option>
                 <option value="3">TRX-OH</option>
@@ -20,7 +20,7 @@
                 <option value="5">TRX-RS</option>
                 <option value="6">TRX-CB</option>
                 <option value="7">TRX-CL</option>
-                <option value="8">EFM-BD</option>
+                <option value="8" selected>EFM-BD</option>
                 <option value="9">EFM-SD</option>
                 <option value="10">EFM-XT</option>
                 <option value="11">EFM-CP</option>
@@ -146,6 +146,13 @@
             </div>
         </div>
         
+        <details id="algorithm-editor" class="algorithm-editor" open>
+            <summary>Algorithm editor <span>EFM sound design</span></summary>
+            <p>Change the synthesis constants while the voice plays. These settings last for this browser session.</p>
+            <p id="algorithm-status" role="status">Open the editor to load its controls.</p>
+            <div id="algorithm-pane"></div>
+        </details>
+
         <div class="sequencer">
             <h2>Sequencer</h2>
             <div class="tempo-control">

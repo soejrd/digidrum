@@ -20,13 +20,16 @@ const machines = {
 };
 
 class MachineAudio {
-    constructor(onStep, onStatus, onDefaults) {
+    constructor(onStep, onStatus, onDefaults, onTweaks) {
         this.onStep = onStep;
         this.onStatus = onStatus;
         this.onDefaults = onDefaults;
+        this.onTweaks = onTweaks;
         this.kind = 0;
         this.controls = Array(8).fill(0);
         this.defaults = null;
+        this.tweakDescriptors = [];
+        this.tweakValuesByKind = new Map();
         this.level = 127;
         this.steps = Array(16).fill(false);
         this.tempo = 120;
@@ -65,9 +68,24 @@ class MachineAudio {
         const wasmReady = new Promise((resolve, reject) => {
             this.node.port.onmessage = event => {
                 const message = event.data;
-                if (message.type === 'ready') resolve(message.defaults);
+                if (message.type === 'ready') {
+                    this.tweakDescriptors = message.tweakDescriptors;
+                    if (message.kind >= 8)
+                        this.tweakValuesByKind.set(message.kind, message.tweakValues);
+                    resolve(message.defaults);
+                }
                 else if (message.type === 'error') reject(new Error(message.message));
                 else if (message.type === 'step') this.onStep(message.index);
+                else if (message.type === 'tweak-values' && message.kind >= 8) {
+                    this.tweakValuesByKind.set(message.kind, message.values);
+                    if (message.kind === this.kind) this.onTweaks(message.kind, message.values);
+                } else if (message.type === 'tweak-value' && message.kind >= 8) {
+                    const values = this.tweakValuesByKind.get(message.kind);
+                    if (values) {
+                        values[message.index] = message.value;
+                        if (message.kind === this.kind) this.onTweaks(message.kind, values);
+                    }
+                }
             };
         });
         this.node.port.postMessage({type: 'wasm', bytes}, [bytes]);
@@ -86,8 +104,17 @@ class MachineAudio {
     setKind(kind) {
         this.kind = kind;
         this.controls = this.defaults ? [...this.defaults[kind].controls] : Array(8).fill(0);
-        this.send({type: 'kind', kind});
+        this.send({type: 'kind', kind, tweaks: this.tweakValuesByKind.get(kind)});
         this.controls.forEach((value, index) => this.send({type: 'control', index, value}));
+    }
+
+    setTweak(index, value) {
+        const values = this.tweakValuesByKind.get(this.kind);
+        if (!values || !this.tweakDescriptors[index]) return;
+        const desc = this.tweakDescriptors[index];
+        const next = Math.max(desc.min, Math.min(desc.max, Math.round(value)));
+        values[index] = next;
+        this.send({type: 'tweak-set', index, value: next});
     }
 
     setControl(index, value) {
@@ -135,13 +162,43 @@ document.addEventListener('DOMContentLoaded', () => {
     const machineSelect = document.getElementById('machine-select');
     const level = document.getElementById('level');
     const tempo = document.getElementById('tempo');
+    const algorithmDetails = document.getElementById('algorithm-editor');
+    const algorithmStatus = document.getElementById('algorithm-status');
+    let algorithmEditor = null;
+    let editorModule = null;
+
+    async function showAlgorithm(kind, values) {
+        if (kind < 8 || kind !== audio.kind || !algorithmDetails.open || !values) return;
+        const needsEditor = !algorithmEditor || algorithmEditor.kind !== kind;
+        if (needsEditor) algorithmStatus.textContent = 'Loading algorithm controls…';
+        try {
+            editorModule ??= import('./algorithm-editor.js');
+            const {AlgorithmEditor} = await editorModule;
+            if (kind !== audio.kind || !algorithmDetails.open) return;
+            algorithmEditor ??= new AlgorithmEditor(
+                document.getElementById('algorithm-pane'),
+                (index, value) => audio.setTweak(index, value)
+            );
+            if (algorithmEditor.kind === kind)
+                algorithmEditor.update(values);
+            else
+                algorithmEditor.show(kind, audio.tweakDescriptors, values);
+            if (needsEditor)
+                algorithmStatus.textContent = `${machines[kind].name} algorithm settings are live.`;
+        } catch (error) {
+            editorModule = null;
+            algorithmStatus.textContent = `Could not load Tweakpane: ${error.message}`;
+        }
+    }
+
     const audio = new MachineAudio(index => {
         steps.forEach((step, i) => step.classList.toggle('current', i === index));
         playhead.style.left = `${index * 28}px`;
     }, (message, error = false) => {
         status.textContent = message;
         status.classList.toggle('error', error);
-    }, () => machineSelect.dispatchEvent(new Event('change')));
+    }, () => machineSelect.dispatchEvent(new Event('change')),
+    (kind, values) => showAlgorithm(kind, values));
 
     function showKnob(wrapper, value) {
         wrapper.dataset.value = String(value);
@@ -191,6 +248,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     machineSelect.addEventListener('change', () => {
         const kind = Number(machineSelect.value);
+        algorithmDetails.hidden = kind < 8;
         audio.setKind(kind);
         wrappers.forEach((wrapper, index) => {
             const name = machines[kind].labels[index];
@@ -201,9 +259,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 showKnob(wrapper, audio.controls[index]);
             }
         });
+        if (kind >= 8) showAlgorithm(kind, audio.tweakValuesByKind.get(kind));
     });
     machineSelect.dispatchEvent(new Event('change'));
     audio.ensureReady().catch(() => {}); // Load C defaults while audio remains suspended.
+
+    algorithmDetails.addEventListener('toggle', () => {
+        if (algorithmDetails.open) showAlgorithm(audio.kind, audio.tweakValuesByKind.get(audio.kind));
+    });
 
     level.addEventListener('input', () => {
         const value = Number(level.value);
@@ -229,4 +292,5 @@ document.addEventListener('DOMContentLoaded', () => {
         audio.stop();
         steps.forEach(step => step.classList.remove('current'));
     });
+
 });
