@@ -21,7 +21,7 @@ This is a fresh era for these boxes. We can now explore new synthesis engines in
 | --- | --- |
 | TRX-BD | ⬜⬜⬜⬜⬜ |
 | TRX-B2 | 🟩🟩🟩🟩⬜ |  
-| TRX-SD | 🟩⬜⬜⬜⬜ |   
+| TRX-SD | 🟩🟩🟩🟩⬜ |   
 | TRX-XT | 🟩⬜⬜⬜⬜ |   
 | TRX-CP | ⬜⬜⬜⬜⬜ |   
 | TRX-RS | 🟩⬜⬜⬜⬜ |   
