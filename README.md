@@ -19,55 +19,55 @@ This is a fresh era for these boxes. We can now explore new synthesis engines in
 
 | Voice | Progress | Status |
 | --- | --- | --- |
-| TRX-BD | ⬜⬜⬜⬜⬜ | Not started |
-| TRX-B2 | 🟩🟩🟩🟩🟨 | ~90% |
-| TRX-SD | 🟨⬜⬜⬜⬜ | Init |
-| TRX-XT | 🟨⬜⬜⬜⬜ | Init |
-| TRX-CP | ⬜⬜⬜⬜⬜ | Not started |
-| TRX-RS | 🟨⬜⬜⬜⬜ | Init |
-| TRX-CB | 🟨⬜⬜⬜⬜ | Init |
-| TRX-CH | 🟨⬜⬜⬜⬜ | Init |
-| TRX-OH | 🟨⬜⬜⬜⬜ | Init |
-| TRX-CY | 🟨⬜⬜⬜⬜ | Init |
-| TRX-MA | 🟨⬜⬜⬜⬜ | Init |
-| TRX-CL | 🟨⬜⬜⬜⬜ | Init |
-| TRX-XC | 🟨⬜⬜⬜⬜ | Init |
-| EFM-BD | 🟩🟩🟩🟩🟨 | ~90% |
-| EFM-SD | 🟨⬜⬜⬜⬜ | Init |
-| EFM-XT | 🟨⬜⬜⬜⬜ | Init |
-| EFM-CP | 🟨⬜⬜⬜⬜ | Init |
-| EFM-RS | 🟨⬜⬜⬜⬜ | Init |
-| EFM-CB | 🟨⬜⬜⬜⬜ | Init |
-| EFM-HH | 🟨⬜⬜⬜⬜ | Init |
-| EFM-CY | 🟨⬜⬜⬜⬜ | Init |
-| E12-BD | ⬜⬜⬜⬜⬜ | Not started |
-| E12-SD | ⬜⬜⬜⬜⬜ | Not started |
-| E12-HT | ⬜⬜⬜⬜⬜ | Not started |
-| E12-LT | ⬜⬜⬜⬜⬜ | Not started |
-| E12-CP | ⬜⬜⬜⬜⬜ | Not started |
-| E12-RS | ⬜⬜⬜⬜⬜ | Not started |
-| E12-CB | ⬜⬜⬜⬜⬜ | Not started |
-| E12-CH | ⬜⬜⬜⬜⬜ | Not started |
-| E12-OH | ⬜⬜⬜⬜⬜ | Not started |
-| E12-RC | ⬜⬜⬜⬜⬜ | Not started |
-| E12-CC | ⬜⬜⬜⬜⬜ | Not started |
-| E12-BR | ⬜⬜⬜⬜⬜ | Not started |
-| E12-TA | ⬜⬜⬜⬜⬜ | Not started |
-| E12-TR | ⬜⬜⬜⬜⬜ | Not started |
-| E12-SH | ⬜⬜⬜⬜⬜ | Not started |
-| E12-BC | ⬜⬜⬜⬜⬜ | Not started |
-| PI-BD | ⬜⬜⬜⬜⬜ | Not started |
-| PI-SD | ⬜⬜⬜⬜⬜ | Not started |
-| PI-XT | ⬜⬜⬜⬜⬜ | Not started |
-| PI-RS | ⬜⬜⬜⬜⬜ | Not started |
-| PI-ML | ⬜⬜⬜⬜⬜ | Not started |
-| PI-MA | ⬜⬜⬜⬜⬜ | Not started |
-| PI-HH | ⬜⬜⬜⬜⬜ | Not started |
-| PI-RC | ⬜⬜⬜⬜⬜ | Not started |
-| PI-CC | ⬜⬜⬜⬜⬜ | Not started |
-| GND-SN | ⬜⬜⬜⬜⬜ | Not started |
-| GND-NS | ⬜⬜⬜⬜⬜ | Not started |
-| GND-IM | ⬜⬜⬜⬜⬜ | Not started |
+| TRX-BD | ⬜⬜⬜⬜⬜ |   |
+| TRX-B2 | 🟩🟩🟩🟩🟨 |   |
+| TRX-SD | 🟨⬜⬜⬜⬜ |   |
+| TRX-XT | 🟨⬜⬜⬜⬜ |   |
+| TRX-CP | ⬜⬜⬜⬜⬜ |   |
+| TRX-RS | 🟨⬜⬜⬜⬜ |   |
+| TRX-CB | 🟨⬜⬜⬜⬜ |   |
+| TRX-CH | 🟨⬜⬜⬜⬜ |   |
+| TRX-OH | 🟨⬜⬜⬜⬜ |   |
+| TRX-CY | 🟨⬜⬜⬜⬜ |   |
+| TRX-MA | 🟨⬜⬜⬜⬜ |   |
+| TRX-CL | 🟨⬜⬜⬜⬜ |   |
+| TRX-XC | 🟨⬜⬜⬜⬜ |   |
+| EFM-BD | 🟩🟩🟩🟩🟨 |   |
+| EFM-SD | 🟨⬜⬜⬜⬜ |   |
+| EFM-XT | 🟨⬜⬜⬜⬜ |   |
+| EFM-CP | 🟨⬜⬜⬜⬜ |   |
+| EFM-RS | 🟨⬜⬜⬜⬜ |   |
+| EFM-CB | 🟨⬜⬜⬜⬜ |   |
+| EFM-HH | 🟨⬜⬜⬜⬜ |   |
+| EFM-CY | 🟨⬜⬜⬜⬜ |   |
+| E12-BD | ⬜⬜⬜⬜⬜ |    |
+| E12-SD | ⬜⬜⬜⬜⬜ |    |
+| E12-HT | ⬜⬜⬜⬜⬜ |    |
+| E12-LT | ⬜⬜⬜⬜⬜ |    |
+| E12-CP | ⬜⬜⬜⬜⬜ |    |
+| E12-RS | ⬜⬜⬜⬜⬜ |    |
+| E12-CB | ⬜⬜⬜⬜⬜ |    |
+| E12-CH | ⬜⬜⬜⬜⬜ |    |
+| E12-OH | ⬜⬜⬜⬜⬜ |    |
+| E12-RC | ⬜⬜⬜⬜⬜ |    |
+| E12-CC | ⬜⬜⬜⬜⬜ |    |
+| E12-BR | ⬜⬜⬜⬜⬜ |    |
+| E12-TA | ⬜⬜⬜⬜⬜ |    |
+| E12-TR | ⬜⬜⬜⬜⬜ |    |
+| E12-SH | ⬜⬜⬜⬜⬜ |    |
+| E12-BC | ⬜⬜⬜⬜⬜ |    |
+| PI-BD | ⬜⬜⬜⬜⬜ |    |
+| PI-SD | ⬜⬜⬜⬜⬜ |    |
+| PI-XT | ⬜⬜⬜⬜⬜ |    |
+| PI-RS | ⬜⬜⬜⬜⬜ |    |
+| PI-ML | ⬜⬜⬜⬜⬜ |    |
+| PI-MA | ⬜⬜⬜⬜⬜ |    |
+| PI-HH | ⬜⬜⬜⬜⬜ |    |
+| PI-RC | ⬜⬜⬜⬜⬜ |    |
+| PI-CC | ⬜⬜⬜⬜⬜ |    |
+| GND-SN | ⬜⬜⬜⬜⬜ |    |
+| GND-NS | ⬜⬜⬜⬜⬜ |    |
+| GND-IM | ⬜⬜⬜⬜⬜ |    |
 
 ## Super alpha: expect things to break
 
@@ -84,4 +84,4 @@ The machines are portable C99 using shared fixed-point oscillators, envelopes, n
 - [Machine roadmap](Planning/MACHINE_ROADMAP.md)
 - [Recreation pipeline](engineering/MACHINEDRUM_RECREATION_PIPELINE.md)
 - [Testing and benchmarks](Verification/TESTING_AND_BENCHMARKS.md)
-- [Project boundaries](Project%20definition/PROJECT_BOUNDARIES.md)
+- [Project boundaries](Project%20def ion/PROJECT_BOUNDARIES.md)
