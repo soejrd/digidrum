@@ -3,187 +3,88 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Digidrum machine test</title>
+    <title>Digidrum</title>
     <link rel="stylesheet" href="style.css">
+    <style>
+        /* Temporary holding screen. The web player is removed for now; this
+           only borrows the panel palette from style.css. */
+        .screen {
+            padding: 28px 26px 30px;
+            border: 1px solid var(--line);
+            border-radius: 3px;
+            background:
+                repeating-linear-gradient(to bottom, #ffffff06 0 1px, transparent 1px 3px),
+                var(--screen);
+            box-shadow: inset 0 0 44px #000a, 0 0 26px #f0b65d10;
+            color: var(--amber);
+            text-shadow: 0 0 8px #f0b65d5c;
+        }
+
+        .screen-line {
+            margin: 0 0 10px;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: .28em;
+            text-transform: uppercase;
+        }
+
+        .screen-line.dim {
+            color: var(--muted);
+            font-weight: 400;
+            letter-spacing: .18em;
+            text-shadow: none;
+        }
+
+        .screen-line.big {
+            margin: 20px 0 22px;
+            font-size: 24px;
+            letter-spacing: .16em;
+            color: #ffd489;
+        }
+
+        .cursor { animation: blink 1s steps(1) infinite; }
+
+        .meter {
+            height: 10px;
+            border: 1px solid var(--line);
+            background: #0a0d0a;
+            overflow: hidden;
+        }
+
+        .meter span {
+            display: block;
+            height: 100%;
+            width: 40%;
+            background: var(--amber);
+            box-shadow: 0 0 12px #f0b65d99;
+            animation: load 3.2s ease-in-out infinite;
+        }
+
+        @keyframes blink { 50% { opacity: 0; } }
+        @keyframes load {
+            0%   { width: 8%; }
+            50%  { width: 92%; }
+            100% { width: 8%; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .cursor, .meter span { animation: none; }
+            .meter span { width: 60%; }
+        }
+
+        #audio-status { margin-top: 18px; margin-bottom: 0; }
+    </style>
 </head>
 <body>
     <div class="container">
-        <h1>Digidrum machine test</h1>
-        <div class="controls">
-            <label for="machine-select">Machine:</label>
-            <select id="machine-select">
-                <option value="0">TRX-B2</option>
-                <option value="1">TRX-SD</option>
-                <option value="2">TRX-CH</option>
-                <option value="3">TRX-OH</option>
-                <option value="4">TRX-CY</option>
-                <option value="5">TRX-RS</option>
-                <option value="6">TRX-CB</option>
-                <option value="7">TRX-CL</option>
-                <option value="8" selected>EFM-BD</option>
-                <option value="9">EFM-SD</option>
-                <option value="10">EFM-XT</option>
-                <option value="11">EFM-CP</option>
-                <option value="12">EFM-RS</option>
-                <option value="13">EFM-CB</option>
-                <option value="14">EFM-HH</option>
-                <option value="15">EFM-CY</option>
-            </select>
-            <button id="trigger-btn" type="button">Trigger</button>
-            <button id="play-btn">Play</button>
-            <button id="stop-btn">Stop</button>
-            <label for="level">Level</label>
-            <input type="range" id="level" min="0" max="127" value="127">
-            <span id="level-value">127</span>
+        <h1>Digidrum</h1>
+        <div class="screen" role="status">
+            <p class="screen-line">Machine data offline</p>
+            <p class="screen-line dim">Web player removed for upgrade</p>
+            <p class="screen-line big">Coming next week<span class="cursor">_</span></p>
+            <div class="meter"><span></span></div>
         </div>
-        <p id="audio-status" role="status">Press Trigger or Play to start audio.</p>
-        
-        <div class="encoders-grid">
-            <!-- 8 encoder knobs in 2 rows 4 columns -->
-            <div class="knob-wrapper" data-param="pitch">
-                <div class="knob-container">
-                    <div class="ring"></div>
-                    <div class="ring-fill"></div>
-                    <div class="space"></div>
-                    <div class="knob">
-                        <div class="knob-indicator-container">
-                            <div class="knob-indicator"></div>
-                        </div>
-                    </div>
-                </div>
-                <label class="param-name">Pitch</label>
-            </div>
-            <div class="knob-wrapper" data-param="decay">
-                <div class="knob-container">
-                    <div class="ring"></div>
-                    <div class="ring-fill"></div>
-                    <div class="space"></div>
-                    <div class="knob">
-                        <div class="knob-indicator-container">
-                            <div class="knob-indicator"></div>
-                        </div>
-                    </div>
-                </div>
-                <label class="param-name">Decay</label>
-            </div>
-            <div class="knob-wrapper" data-param="ramp">
-                <div class="knob-container">
-                    <div class="ring"></div>
-                    <div class="ring-fill"></div>
-                    <div class="space"></div>
-                    <div class="knob">
-                        <div class="knob-indicator-container">
-                            <div class="knob-indicator"></div>
-                        </div>
-                    </div>
-                </div>
-                <label class="param-name">Ramp</label>
-            </div>
-            <div class="knob-wrapper" data-param="hold">
-                <div class="knob-container">
-                    <div class="ring"></div>
-                    <div class="ring-fill"></div>
-                    <div class="space"></div>
-                    <div class="knob">
-                        <div class="knob-indicator-container">
-                            <div class="knob-indicator"></div>
-                        </div>
-                    </div>
-                </div>
-                <label class="param-name">Hold</label>
-            </div>
-            <div class="knob-wrapper" data-param="tick">
-                <div class="knob-container">
-                    <div class="ring"></div>
-                    <div class="ring-fill"></div>
-                    <div class="space"></div>
-                    <div class="knob">
-                        <div class="knob-indicator-container">
-                            <div class="knob-indicator"></div>
-                        </div>
-                    </div>
-                </div>
-                <label class="param-name">Tick</label>
-            </div>
-            <div class="knob-wrapper" data-param="noise">
-                <div class="knob-container">
-                    <div class="ring"></div>
-                    <div class="ring-fill"></div>
-                    <div class="space"></div>
-                    <div class="knob">
-                        <div class="knob-indicator-container">
-                            <div class="knob-indicator"></div>
-                        </div>
-                    </div>
-                </div>
-                <label class="param-name">Noise</label>
-            </div>
-            <div class="knob-wrapper" data-param="dirt">
-                <div class="knob-container">
-                    <div class="ring"></div>
-                    <div class="ring-fill"></div>
-                    <div class="space"></div>
-                    <div class="knob">
-                        <div class="knob-indicator-container">
-                            <div class="knob-indicator"></div>
-                        </div>
-                    </div>
-                </div>
-                <label class="param-name">Dirt</label>
-            </div>
-            <div class="knob-wrapper" data-param="dist">
-                <div class="knob-container">
-                    <div class="ring"></div>
-                    <div class="ring-fill"></div>
-                    <div class="space"></div>
-                    <div class="knob">
-                        <div class="knob-indicator-container">
-                            <div class="knob-indicator"></div>
-                        </div>
-                    </div>
-                </div>
-                <label class="param-name">Dist</label>
-            </div>
-        </div>
-        
-        <details id="algorithm-editor" class="algorithm-editor" open>
-            <summary>Algorithm editor <span>TRX and EFM sound design</span></summary>
-            <p>Change the synthesis constants while the voice plays. These settings last for this browser session.</p>
-            <p id="algorithm-status" role="status">Open the editor to load its controls.</p>
-            <div id="algorithm-pane"></div>
-        </details>
-
-        <div class="sequencer">
-            <h2>Sequencer</h2>
-            <div class="tempo-control">
-                <label for="tempo">Tempo (BPM):</label>
-                <input type="range" id="tempo" min="30" max="240" value="120">
-                <span id="tempo-value">120</span> BPM
-            </div>
-            <div class="steps-container">
-                <div class="steps">
-                    <!-- 16 steps -->
-                    <div class="step" id="step-1"></div>
-                    <div class="step" id="step-2"></div>
-                    <div class="step" id="step-3"></div>
-                    <div class="step" id="step-4"></div>
-                    <div class="step" id="step-5"></div>
-                    <div class="step" id="step-6"></div>
-                    <div class="step" id="step-7"></div>
-                    <div class="step" id="step-8"></div>
-                    <div class="step" id="step-9"></div>
-                    <div class="step" id="step-10"></div>
-                    <div class="step" id="step-11"></div>
-                    <div class="step" id="step-12"></div>
-                    <div class="step" id="step-13"></div>
-                    <div class="step" id="step-14"></div>
-                    <div class="step" id="step-15"></div>
-                    <div class="step" id="step-16"></div>
-                </div>
-                <div class="playhead"></div>
-            </div>
-        </div>
+        <p id="audio-status">New sound machines are being installed. Check back soon.</p>
     </div>
-    <script src="script.js"></script>
 </body>
 </html>

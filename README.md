@@ -11,7 +11,7 @@ The goal is to recreate **every machine from the original Elektron Machinedrum**
 
 [Sneak preview demo file](website/demos/trx-01.mp3)
 
-[Try the TRX and EFM machines in your browser](https://soejrd.github.io/digidrum/).
+The interactive web player is offline while it is reworked; the page will return when the new machines are ready.
 
 This is a fresh era for these boxes. We can now explore new synthesis engines inside a familiar sequencer, with parameter locks, track effects, and hands-on controls.
 
@@ -77,7 +77,7 @@ Today, the firmware target is the **original Digitakt Mk1 running OS 1.53**. Dig
 
 ## How it is built
 
-The machines are portable C99 using shared fixed-point oscillators, envelopes, noise, and filters. The Digitakt adapter renders into the stock track path, while the browser runs that same C code in an AudioWorklet. Each family has a C defaults table shared by both interfaces.
+The machines are portable C99 using shared fixed-point oscillators, envelopes, noise, and filters. The Digitakt adapter renders into the stock track path. Each family has a C defaults table shared across interfaces. (The browser AudioWorklet player is temporarily offline while it is reworked.)
 
 - [Architecture](Engineering/ARCHITECTURE.md)
 - [DSP guide](Engineering/DSP_GUIDE.md)
