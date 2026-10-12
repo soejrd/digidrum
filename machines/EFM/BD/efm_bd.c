@@ -30,32 +30,23 @@
  *              ph2 += K * (8*mod*(op2*s1) + Y1)      (op1 drives op2)
  *
  * with the two rate constants K = 32768 (per-unit) and K1 = 262144 = 8*K.
- * Both were chosen so the fitted operator rates line up with the measured
- * output; see README.md for how the control curves were regressed.
  */
 #include "efm_bd.h"
 #include <math.h>
 
 #define TWO_PI 6.283185307179586476925286766559
 
-/* ------- knob conversion: one closed form per control (see README) ------- */
 bd_controls bd_make_controls(const uint8_t knob[8])
 {
     bd_controls c;
     const double k = (double)knob[0];
-
-    /* PTCH: measured response ~= 0.000581 * 2^(v/32), worst 0.12% FS          */
     c.ptch = 0.000581 * pow(2.0, k / 32.0);
-    /* DEC / RDEC / MDEC: all ~= 1 - e * 2^(-v/s); e and s fitted to sweep  */
     c.dec  = 1.0 - 0.009469 * pow(2.0, -(double)knob[1] / 13.5);
     c.rdec = 1.0 - 0.009468 * pow(2.0, -(double)knob[3] / 12.6);
     c.mdec = 1.0 - 0.009474 * pow(2.0, -(double)knob[6] / 11.52);
-    /* RAMP: signed (v-16)/128                                             */
     c.ramp = ((double)knob[2] - 16.0) / 128.0;
-    /* MOD / MFB: exactly v/128                                             */
     c.mod  = (double)knob[4] / 128.0;
     c.mfb  = (double)knob[7] / 128.0;
-    /* MFRQ: exactly max(1, v)/128                                          */
     c.mfrq = (knob[5] < 1 ? 1.0 : (double)knob[5]) / 128.0;
     return c;
 }
