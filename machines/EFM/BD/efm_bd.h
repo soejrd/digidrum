@@ -14,7 +14,7 @@
  * only drops numeric effects that fall below the noise floor in float.
  *
  * Accuracy target: ~95% perceptual, the engineering tolerance used for this
- * project; see README.md for the measurements behind every claim here.
+ * project.
  * ==========================================================================
  */
 #ifndef EFM_BD_H
