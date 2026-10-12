@@ -74,14 +74,3 @@ This is a fresh era for these boxes. We can now explore new synthesis engines in
 Digidrum is experimental firmware not ready for use. **Expect crashes, CPU overload, sound mismatches, missing features, and project or preset behavior that has not been fully verified.** The recent CH/OH prototypes caused fast crashes on a real Digitakt. Keep the stock OS update available and back up anything you care about before trying an alpha image.
 
 Today, the firmware target is the **original Digitakt Mk1 running OS 1.53**. Digitone and Syntakt are part of the goal.
-
-## How it is built
-
-The machines are portable C99 using shared fixed-point oscillators, envelopes, noise, and filters. The Digitakt adapter renders into the stock track path. Each family has a C defaults table shared across interfaces. (The browser AudioWorklet player is temporarily offline while it is reworked.)
-
-- [Architecture](Engineering/ARCHITECTURE.md)
-- [DSP guide](Engineering/DSP_GUIDE.md)
-- [Machine roadmap](Planning/MACHINE_ROADMAP.md)
-- [Recreation pipeline](engineering/MACHINEDRUM_RECREATION_PIPELINE.md)
-- [Testing and benchmarks](Verification/TESTING_AND_BENCHMARKS.md)
-- [Project boundaries](Project%20def ion/PROJECT_BOUNDARIES.md)
