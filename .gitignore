@@ -10,3 +10,4 @@ tests/md_reference/machines/*/report/*.json
 tests/md_reference/scripts/*.RPP
 tests/md_reference/scripts/Media/
 resources/
+machines/
