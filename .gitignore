@@ -11,3 +11,6 @@ tests/md_reference/scripts/*.RPP
 tests/md_reference/scripts/Media/
 resources/
 machines/
+machines/efm.c
+machines/trx_family.c
+machines/trx_md.c
