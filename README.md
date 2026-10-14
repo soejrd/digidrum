@@ -2,12 +2,8 @@
 
 **Bringing the original Machinedrum's sound machines to new hardware**
 
-The goal is to recreate **every machine from the original Elektron Machinedrum** as a playable sound engine. Starting with the TRX kit, then PI, then working through the rest of the lineup. Each machine is being rebuilt from listening, measurements, published descriptions, and new DSP code. This is a recreation of the instruments and their behavior, not a copy or emulation of the original firmware.
+The goal is to recreate **every machine from the original Elektron Machinedrum** as a playable clean room sound engine. Each machine is being rebuilt from listening, measurements, published descriptions, and new DSP code. This is a recreation of the instruments and their behavior, not a copy or emulation of the original firmware.
 <br/><br/>
-<audio controls>
-  <source src="website/demos/trx-01.mp3" type="audio/mpeg">
-</a>
-</audio>
 
 [Sneak preview demo file](website/demos/trx-01.mp3)
 
@@ -33,13 +29,13 @@ This is a fresh era for these boxes. We can now explore new synthesis engines in
 | TRX-CL | 🟨🟨🟨🟨⬜ |   
 | TRX-XC | 🟨🟨🟨🟨⬜ |   
 | EFM-BD | 🟩🟩🟩🟩🟩 |   
-| EFM-SD | 🟨🟨🟨🟨⬜ |   
-| EFM-XT | 🟨🟨🟨🟨⬜ |   
-| EFM-CP | 🟨🟨🟨🟨⬜ |   
-| EFM-RS | 🟨⬜⬜⬜⬜ |   
-| EFM-CB | 🟨🟨🟨🟨⬜ |   
-| EFM-HH | 🟨🟨🟨🟨⬜ |   
-| EFM-CY | 🟨🟨🟨🟨⬜ | 
+| EFM-SD | 🟩🟩🟩🟩🟩 |   
+| EFM-XT | 🟩🟩🟩🟩🟩 |   
+| EFM-CP | 🟩🟩🟩🟩🟩 |   
+| EFM-RS | 🟩🟩🟩🟩🟩 |   
+| EFM-CB | 🟩🟩🟩🟩🟩 |   
+| EFM-HH | 🟩🟩🟩🟩🟩 |   
+| EFM-CY | 🟩🟩🟩🟩🟩 | 
 | PI-BD | 🟨🟨🟨🟨⬜ |    
 | PI-SD | 🟨🟨🟨🟨⬜ |    
 | PI-XT | 🟨🟨🟨🟨⬜ |    
